@@ -2,6 +2,7 @@ module DocSeeker
 
 using StringDistances
 
+# TODO: better string preprocessing.
 function score(needle::String, s::Docs.DocStr)
   binding = split(string(get(s.data, :binding, "")), '.')[end]
   doc = lowercase(join(s.text, '\n'))
