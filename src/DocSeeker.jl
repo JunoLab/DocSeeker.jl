@@ -1,39 +1,46 @@
 module DocSeeker
 
-import Documenter: Utilities, DocSystem
-import Base.Iterators: flatten
-import Base.Docs: levenshtein
 using StringDistances
 
-# TODO: Be a bit more intelligent about this.
-function score(needle::String, s::String)
-  #TODO: Normalization of inputs.
-  compare(TokenMax(Jaro()), lowercase(needle), lowercase(s))
+function score(needle::String, s::Docs.DocStr)
+  binding = split(string(get(s.data, :binding, "")), '.')[end]
+  doc = lowercase(join(s.text, '\n'))
+  (3*compare(Hamming(), needle, binding) + compare(TokenMax(Jaro()), lowercase(needle), doc))/4
 end
 
-score(needle::String, s::Markdown.MD) = score(needle, Markdown.plain(s))
-
-score(needle::String, s::Docs.DocStr) = score(needle, join(s.text, '\n'))
-
-score(needle::String, s::Symbol) = score(needle, String(s))
-
-score(needle::String, s) = 0.0
-
-submodules(mod = Main) = filter!(m -> m != mod, Utilities.submodules(mod))
-
-alldocs(mod = Main) = filter!(!isempty, DocSystem.getdocs.(allbindings(mod)))
-
-allbindings(mod = Main) = collect(flatten(names.(collect(submodules()), true)))
-
-function searchbinding(needle::String, mod::Module=Main)
-  binds = allbindings(mod)
-  scores = score.(needle, binds)
-  perm = sortperm(scores, rev=true)[1:20]
-  binds[perm]
+function modulebindings(mod, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
+  for name in names(mod, true)
+    if isdefined(mod, name) && !Base.isdeprecated(mod, name)
+      obj = getfield(mod, name)
+      !haskey(binds, mod) && (binds[mod] = [])
+      push!(binds[mod], name)
+      if (obj isa Module) && !(obj in seenmods)
+        push!(seenmods, obj)
+        modulebindings(obj, binds, seenmods)
+      end
+    end
+  end
+  return binds
 end
 
-function searchdocs(needle::String, mod::Module=Main)
-  docs = collect(flatten(alldocs()))
+function alldocs(mod = Main)
+  results = Docs.DocStr[]
+  modbinds = modulebindings(mod)
+  for mod in keys(modbinds)
+    meta = Docs.meta(mod)
+    for (binding, multidoc) in meta
+      for sig in multidoc.order
+        d = multidoc.docs[sig]
+        d.data[:binding] = binding
+        push!(results, d)
+      end
+    end
+  end
+  results
+end
+
+function Base.search(needle::String, mod::Module = Main)
+  docs = collect(alldocs(mod))
   scores = score.(needle, docs)
   perm = sortperm(scores, rev=true)[1:20]
   scores[perm], docs[perm]
