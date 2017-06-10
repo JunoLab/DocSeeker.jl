@@ -4,9 +4,10 @@ using StringDistances
 
 # TODO: better string preprocessing.
 function score(needle::String, s::Docs.DocStr)
+  length(s.text) == 0 && return 0.0
   binding = split(string(get(s.data, :binding, "")), '.')[end]
-  doc = lowercase(join(s.text, '\n'))
-  (3*compare(Hamming(), needle, binding) + compare(TokenMax(Jaro()), lowercase(needle), doc))/4
+  doc = lowercase(join(s.text, ' '))
+  (2*compare(Hamming(), needle, binding) + compare(TokenMax(Hamming()), lowercase(needle), doc))/3
 end
 
 function modulebindings(mod, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
@@ -40,6 +41,7 @@ function alldocs(mod = Main)
   results
 end
 
+# TODO: Search through pkgdir/docs
 function Base.search(needle::String, mod::Module = Main)
   docs = collect(alldocs(mod))
   scores = score.(needle, docs)
