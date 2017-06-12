@@ -1,6 +1,7 @@
 module DocSeeker
 
 using StringDistances
+using Juno
 
 # TODO: better string preprocessing.
 function score(needle::String, s::Docs.DocStr)
@@ -47,6 +48,52 @@ function Base.search(needle::String, mod::Module = Main)
   scores = score.(needle, docs)
   perm = sortperm(scores, rev=true)[1:20]
   scores[perm], docs[perm]
+end
+
+# search a package's readme for links to documentation
+function finddocsURL(pkg)
+  pkgpath = Pkg.dir(pkg)
+  isdir(pkgpath) || error("Package $pkg not installed.")
+
+  readmepath = joinpath(pkgpath, "README.md")
+  isfile(readmepath) || return Markdown.Link[]
+
+  md = Markdown.parse(String(read(joinpath(pkgpath, "README.md"))))
+  links = findlinks(md)
+  doclinks = Markdown.Link[]
+  for link in links
+    if isdoclink(link)
+      push!(doclinks, link)
+    end
+  end
+  doclinks
+end
+
+function isdoclink(link::Markdown.Link)
+  p = lowercase(Markdown.plaininline(link))
+  contains(p, "docs") || contains(p, "documentation")
+end
+
+function findlinks(mdobj)
+  doclinks = Markdown.Link[]
+  for obj in mdobj.content
+    findlinks(obj, doclinks)
+  end
+  doclinks
+end
+
+function findlinks(mdobj::Markdown.Paragraph, links)
+  for obj in mdobj.content
+    findlinks(obj, links)
+  end
+end
+
+findlinks(mdobj, links) = nothing
+findlinks(mdobj::Markdown.Link, links) = push!(links, mdobj)
+
+# rendering methods
+function Juno.render(i::Juno.Inline, d::Docs.DocStr)
+  Juno.render(i, Juno.Tree(d.data[:binding], [Text(join(d.text, ' '))]))
 end
 
 end # module
