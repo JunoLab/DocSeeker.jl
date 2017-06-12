@@ -11,13 +11,14 @@ include("static.jl")
 """
     score(needle, s::Docs.DocStr) -> Float
 
-Scores `s` against the search query needle. Returns a `Float` between 0 and 1.
+Scores `s` against the search query `needle`. Returns a `Float` between 0 and 1.
 """
 function score(needle::String, s::Docs.DocStr)
-  length(s.text) == 0 && return 0.0
-  binding = split(string(get(s.data, :binding, "")), '.')[end]
+  binding = haskey(s.data, :binding) ? string(s.data[:binding].var) : ""
+  length(s.text) == 0 && return compare(Hamming(), needle, binding)
   doc = lowercase(join(s.text, ' '))
-  (2*compare(Hamming(), needle, binding) + compare(TokenMax(Hamming()), lowercase(needle), doc))/3
+  (3*compare(Jaccard(2), needle, binding) + compare(TokenSet(Jaro()), lowercase(needle), doc))/4
+
 end
 
 # rendering methods
