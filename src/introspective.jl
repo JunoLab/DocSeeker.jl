@@ -1,3 +1,4 @@
+
 function dynamicsearch(needle::String, mod::Module = Main)
   docs = collect(alldocs(mod))
   scores = score.(needle, docs)
@@ -21,15 +22,14 @@ function modulebindings(mod, binds = Dict{Module, Vector{Symbol}}(), seenmods = 
 end
 
 function alldocs(mod = Main)
-  results = Docs.DocStr[]
+  results = DocObj[]
   modbinds = modulebindings(mod)
   for mod in keys(modbinds)
     meta = Docs.meta(mod)
     for (binding, multidoc) in meta
       for sig in multidoc.order
         d = multidoc.docs[sig]
-        d.data[:binding] = binding
-        push!(results, d)
+        push!(results, DocObj(binding.var, Symbol(binding.mod), d.object, join(d.text, ' ')))
       end
     end
   end
