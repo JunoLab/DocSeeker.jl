@@ -1,4 +1,3 @@
-# TODO: Search through pkgdir/docs
 function dynamicsearch(needle::String, mod::Module = Main)
   docs = collect(alldocs(mod))
   scores = score.(needle, docs)
