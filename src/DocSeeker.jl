@@ -6,6 +6,7 @@ using Juno
 include("introspective.jl")
 include("finddocslink.jl")
 include("static.jl")
+include("db.jl")
 
 # TODO: better string preprocessing.
 """
@@ -17,8 +18,7 @@ function score(needle::String, s::Docs.DocStr)
   binding = haskey(s.data, :binding) ? string(s.data[:binding].var) : ""
   length(s.text) == 0 && return compare(Hamming(), needle, binding)
   doc = lowercase(join(s.text, ' '))
-  (3*compare(Jaccard(2), needle, binding) + compare(TokenSet(Jaro()), lowercase(needle), doc))/4
-
+  max(1.1*compare(Jaro(), needle, binding), 0.9*compare(TokenSet(Jaro()), lowercase(needle), doc))
 end
 
 # rendering methods
