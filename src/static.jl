@@ -2,7 +2,7 @@ using JLD, FileIO
 
 const dbpath = joinpath(@__DIR__, "..", "db", "usingdb.jld")
 
-function createdocsdb()
+function _createdocsdb()
   for pkg in readdir(Pkg.dir())
     @eval begin
       try
@@ -11,10 +11,17 @@ function createdocsdb()
     end
   end
   docs = alldocs()
-  save(File(format"JLD", dbpath), "d", d)
-  nothing
+  open(dbpath, "w+") do io
+    serialize(io, docs)
+  end
+end
+
+function createdocsdb()
+  run(`julia -e "using DocSeeker; DocSeeker._createdocsdb()"`)
 end
 
 function loaddocsdb()
-  JLD.read(dbpath, "d")
+  open(dbpath, "r") do io
+    deserialize(io)
+  end
 end

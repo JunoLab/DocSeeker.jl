@@ -40,7 +40,7 @@ function Juno.render(i::Juno.Inline, d::DocObj)
 end
 
 include("introspective.jl")
-include("finddocslink.jl")
+include("finddocs.jl")
 include("static.jl")
 include("db.jl")
 
