@@ -29,7 +29,7 @@ function alldocs(mod = Main)
     for (binding, multidoc) in meta
       for sig in multidoc.order
         d = multidoc.docs[sig]
-        push!(results, DocObj(binding.var, Symbol(binding.mod), d.object, join(d.text, ' ')))
+        push!(results, DocObj(binding.var, Symbol(binding.mod), d.object, join(d.text, ' '), d.data[:path], d.data[:linenumber]))
       end
     end
   end

@@ -1,13 +1,15 @@
 module DocSeeker
 
 using StringDistances
-using Juno
+using Juno, Hiccup
 
 struct DocObj
   name::Symbol
   mod::Symbol
   md::Nullable{Markdown.MD}
   text::String
+  path::String
+  line::Int
 end
 
 # TODO: better string preprocessing.
@@ -36,7 +38,7 @@ function Juno.render(i::Juno.Inline, d::Docs.DocStr)
 end
 
 function Juno.render(i::Juno.Inline, d::DocObj)
-  Juno.render(i, Juno.Tree(Text(d.name), [Markdown.parse(d.text)]))
+  Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", "$(d.name)"), span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
 end
 
 include("introspective.jl")
