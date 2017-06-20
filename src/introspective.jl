@@ -21,6 +21,11 @@ function modulebindings(mod, binds = Dict{Module, Vector{Symbol}}(), seenmods = 
   return binds
 end
 
+"""
+    alldocs(mod = Main) -> Vector{DocObj}
+
+Find all docstrings in module `mod` and it's submodules.
+"""
 function alldocs(mod = Main)
   results = DocObj[]
   modbinds = modulebindings(mod)
@@ -29,7 +34,7 @@ function alldocs(mod = Main)
     for (binding, multidoc) in meta
       for sig in multidoc.order
         d = multidoc.docs[sig]
-        push!(results, DocObj(binding.var, Symbol(binding.mod), d.object, join(d.text, ' '), d.data[:path], d.data[:linenumber]))
+        push!(results, DocObj(string(binding.var), string(binding.mod), join(d.text, ' '), d.data[:path], d.data[:linenumber]))
       end
     end
   end

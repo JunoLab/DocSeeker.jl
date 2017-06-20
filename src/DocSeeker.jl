@@ -4,9 +4,8 @@ using StringDistances
 using Juno, Hiccup
 
 struct DocObj
-  name::Symbol
-  mod::Symbol
-  md::Nullable{Markdown.MD}
+  name::String
+  mod::String
   text::String
   path::String
   line::Int
@@ -21,7 +20,7 @@ Scores `s` against the search query `needle`. Returns a `Float` between 0 and 1.
 function score(needle::String, s::Docs.DocStr)
   binding = haskey(s.data, :binding) ? string(s.data[:binding].var) : ""
   length(s.text) == 0 && return compare(Hamming(), needle, binding)
-  doc = lowercase(Docs.stripmd(get(s.object, Markdown.parse(join(s.text, ' ')))))
+  doc = lowercase(Docs.stripmd(Markdown.parse(join(s.text, ' '))))
   max(compare(Jaro(), needle, binding), 0.8*compare(TokenSet(Jaro()), lowercase(needle), doc))
 end
 
@@ -38,7 +37,7 @@ function Juno.render(i::Juno.Inline, d::Docs.DocStr)
 end
 
 function Juno.render(i::Juno.Inline, d::DocObj)
-  Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", "$(d.name)"), span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
+  Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name), span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
 end
 
 include("introspective.jl")

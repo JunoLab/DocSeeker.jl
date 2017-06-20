@@ -1,6 +1,4 @@
-using JLD, FileIO
-
-const dbpath = joinpath(@__DIR__, "..", "db", "usingdb.jld")
+const dbpath = joinpath(@__DIR__, "..", "db", "usingdb")
 
 function _createdocsdb()
   for pkg in readdir(Pkg.dir())
@@ -11,13 +9,14 @@ function _createdocsdb()
     end
   end
   docs = alldocs()
+
   open(dbpath, "w+") do io
     serialize(io, docs)
   end
 end
 
 function createdocsdb()
-  run(`julia -e "using DocSeeker; DocSeeker._createdocsdb()"`)
+  spawn(`julia -e "using DocSeeker; DocSeeker._createdocsdb()"`)
 end
 
 function loaddocsdb()
