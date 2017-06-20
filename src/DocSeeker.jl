@@ -31,8 +31,8 @@ function fuzzaldrin_score(needle::String, haystack::String)
   needle == haystack && return 1.0
 
   totalCharacterScore = 0.0
-  needle_length = length(needle)
-  haystack_length = length(haystack)
+  needleLength = length(needle)
+  haystackLength = length(haystack)
 
   for (i, c) in enumerate(needle)
     lowerCaseIndex = searchindex(haystack, lowercase(c))
@@ -59,8 +59,8 @@ function fuzzaldrin_score(needle::String, haystack::String)
     totalCharacterScore += characterScore
   end
 
-  queryScore = totalCharacterScore/haystack_length
-  return (queryScore*(needle_length/haystack_length) + queryScore)/2
+  queryScore = totalCharacterScore/haystackLength
+  return (queryScore*(needleLength/haystackLength) + queryScore)/2
 end
 
 function score(needle::String, s::DocObj)
