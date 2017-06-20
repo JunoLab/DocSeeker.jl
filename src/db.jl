@@ -6,7 +6,7 @@ function createDB()
   local db
   if !isfile(sqldbpath)
     db = SQLite.DB(sqldbpath)
-    # would actually like to use CREATE VIRTUAL TABLE DOCS fts5(...) here, but SQLite.jl's
+    # would actually like to use `CREATE VIRTUAL TABLE DOCS fts5(...)` here, but SQLite.jl's
     # sqlite lib isn#t compiled with support for fts5...
     SQLite.query(db,
       """
