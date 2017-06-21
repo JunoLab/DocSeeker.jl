@@ -1,5 +1,18 @@
 using DocSeeker
 using Base.Test
 
-# write your own tests here
-@test 1 == 2
+import DocSeeker: dynamicsearch
+
+function firstN(matches, desired, N = 3)
+  binds = map(x -> x.name, matches[1:N])
+  for i = 1:N
+    if !(binds[i] in desired)
+      return false
+    end
+  end
+  return true
+end
+
+# get rid of `[2]` once dynamicsearch stops returning the score
+@test first3(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
+@test first3(dynamicsearch("sin")[2], ["sin", "sind", "asin"])
