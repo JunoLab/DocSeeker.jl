@@ -14,5 +14,5 @@ function firstN(matches, desired, N = 3)
 end
 
 # get rid of `[2]` once dynamicsearch stops returning the score
-@test first3(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
-@test first3(dynamicsearch("sin")[2], ["sin", "sind", "asin"])
+@test firstN(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
+@test firstN(dynamicsearch("sin")[2], ["sin", "sind", "asin"])
