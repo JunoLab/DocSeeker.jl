@@ -49,5 +49,8 @@ include("introspective.jl")
 include("finddocs.jl")
 include("static.jl")
 include("db.jl")
+include("precompile.jl")
+
+_precompile_()
 
 end # module

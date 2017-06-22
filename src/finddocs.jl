@@ -1,4 +1,4 @@
-using URIParser, DataFrames
+using URIParser
 
 jlhome() = ccall(:jl_get_julia_home, Any, ())
 
@@ -12,7 +12,8 @@ end
     docsdir(pkg) -> String
 
 Find the directory conataining the documenatation for package `pkg`. Will fall back to
-returning a documentation URL in the package's README.md.
+returning a documentation URL in the package's README.md. Returns an empty `String` if
+no indication of documentation is found.
 """
 function docsdir(pkg)
   # sepcial case base
