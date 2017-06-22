@@ -12,8 +12,8 @@ end
     docsdir(pkg) -> String
 
 Find the directory conataining the documenatation for package `pkg`. Will fall back to
-returning a documentation URL in the package's README.md. Returns an empty `String` if
-no indication of documentation is found.
+returning a package's README.md. Returns an empty `String` if no indication of documentation
+is found.
 """
 function docsdir(pkg)
   # sepcial case base
@@ -31,10 +31,17 @@ function docsdir(pkg)
   docpath = joinpath(pkgpath, "doc", "src")
   isdir(docpath) && return docpath
 
-  # fallback to link
-  baseURL(finddocsURL(pkg))
+  # fallback to readme
+  readmepath = joinpath(pkgpath, "README.md")
+  return isfile(readmepath) ? readmepath : ""
 end
 
+"""
+    docsurl(pkg) -> String
+
+Return the most likely candidate for a package's online documentation or an empty string.
+"""
+docsurl(pkg) = baseURL(finddocsURL(pkg))
 
 """
     baseURL(links::Vector{Markdown.Link}) -> String
@@ -72,6 +79,8 @@ function finddocsURL(pkg)
   md = Markdown.parse(String(read(joinpath(pkgpath, "README.md"))))
   links = findlinks(md)
 
+  isempty(links) && (links = findplainlinks(md))
+
   for link in links
     if isdoclink(link)
       push!(doclinks, link)
@@ -80,8 +89,14 @@ function finddocsURL(pkg)
   doclinks
 end
 
+function findplainlinks(md)
+  text = Markdown.plain(md)
+  [Markdown.Link(link, link) for link in matchall(r"(https?:\/\/[^\s]+)\b", text)]
+end
+
 function isdoclink(link::Markdown.Link)
   p = lowercase(Markdown.plaininline(link))
+  # TODO: could be a bit smarter about this
   contains(p, "docs") || contains(p, "documentation")
 end
 
