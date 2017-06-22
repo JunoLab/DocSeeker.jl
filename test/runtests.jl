@@ -16,3 +16,5 @@ end
 # get rid of `[2]` once dynamicsearch stops returning the score
 @test firstN(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
 @test firstN(dynamicsearch("sin")[2], ["sin", "sind", "asin"])
+
+include("finddocs.jl")
