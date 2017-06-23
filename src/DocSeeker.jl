@@ -5,9 +5,12 @@ module DocSeeker
 using StringDistances
 using Juno, Hiccup
 
+# TODO: figure out how to get something useable out of `DocObj.sig`
 struct DocObj
   name::String
   mod::String
+  typ::String
+  sig::Any
   text::String
   path::String
   line::Int

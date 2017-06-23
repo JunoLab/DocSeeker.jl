@@ -34,9 +34,20 @@ function alldocs(mod = Main)
     for (binding, multidoc) in meta
       for sig in multidoc.order
         d = multidoc.docs[sig]
-        push!(results, DocObj(string(binding.var), string(binding.mod), join(d.text, ' '), d.data[:path], d.data[:linenumber]))
+        var = binding.var
+        mod = binding.mod
+        dobj = DocObj(string(var), string(mod), string(determinetype(mod, var)), sig, join(d.text, ' '), d.data[:path], d.data[:linenumber])
+        push!(results, dobj)
       end
     end
   end
   results
+end
+
+function determinetype(mod, var)
+  b = getfield(mod, var)
+
+  b isa Function && return "Function"
+
+  string(typeof(b))
 end
