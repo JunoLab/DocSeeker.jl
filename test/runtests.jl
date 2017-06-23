@@ -17,4 +17,8 @@ end
 @test firstN(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
 @test firstN(dynamicsearch("sin")[2], ["sin", "sind", "asin"])
 
+DocSeeker._createdocsdb()
+@test isfile(DocSeeker.dbpath)
+@test !isempty(DocSeeker.loaddocsdb())
+
 include("finddocs.jl")
