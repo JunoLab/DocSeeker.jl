@@ -2,10 +2,10 @@ using URIParser
 
 jlhome() = ccall(:jl_get_julia_home, Any, ())
 
-function basepath(file)
-  srcdir = joinpath(jlhome(),"..","..")
-  releasedir = joinpath(jlhome(),"..","share","julia")
-  normpath(joinpath(isdir(srcdir) ? srcdir : releasedir, file))
+function basepath(files...)
+  srcdir = joinpath(jlhome(), "..", "..")
+  releasedir = joinpath(jlhome(), "..", "share", "julia")
+  normpath(joinpath(isdir(srcdir) ? srcdir : releasedir, files...))
 end
 
 """
@@ -53,7 +53,7 @@ function baseURL(links::Vector{Markdown.Link})
 
   length(links) == 1 && return links[1].url
 
-  # find biggest most common host
+  # find most common host
   urls = map(x -> URI(x.url), links)
   hosts = String[url.host for url in urls]
   perm = sortperm([(host, count(x -> x == host, hosts)) for host in unique(hosts)], lt = (x,y) -> x[2] > y[2])
@@ -97,7 +97,8 @@ end
 function isdoclink(link::Markdown.Link)
   p = lowercase(Markdown.plaininline(link))
   # TODO: could be a bit smarter about this
-  contains(p, "docs") || contains(p, "documentation")
+  contains(p, "docs") || contains(p, "documentation") ||
+    contains(p, "/stable") || contains(p, "/latest")
 end
 
 function findlinks(mdobj)
