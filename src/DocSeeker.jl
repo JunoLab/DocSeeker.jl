@@ -41,7 +41,7 @@ function score(needle::String, s::DocObj)
   doc = lowercase(s.text)
 
   # penalty if binding has no docs
-  score += (length(s.text) == 0 ? 0.74 : 0.75)*compare(Jaro(), needle, binding)
+  score += (length(s.text) == 0 ? 0.74 : 0.75)*compare(Winkler(Jaro()), needle, binding)
   score += 0.25*compare(TokenSet(Jaro()), lowercase(needle), doc)
 
   # penalty if binding isn't exported
