@@ -1,8 +1,13 @@
 
+maindoccache = DocObj[]
+maincachelastupdated = time()
+
+
 function dynamicsearch(needle::String, mod::Module = Main)
   docs = collect(alldocs(mod))
+  isempty(docs) && return ([], [])
   scores = score.(needle, docs)
-  perm = sortperm(scores, rev=true)[1:20]
+  perm = sortperm(scores, rev=true)[1:min(20, length(docs))]
   scores[perm], docs[perm]
 end
 
@@ -27,6 +32,11 @@ end
 Find all docstrings in module `mod` and it's submodules.
 """
 function alldocs(mod = Main)
+  global maindoccache, maincachelastupdated
+
+  # main cache not regenerated more than once every 10s
+  mod == Main && time() - maincachelastupdated < 1e4 && return maindoccache
+
   results = DocObj[]
   modbinds = modulebindings(mod)
   for mod in keys(modbinds)
@@ -36,10 +46,15 @@ function alldocs(mod = Main)
         d = multidoc.docs[sig]
         var = binding.var
         mod = binding.mod
-        dobj = DocObj(string(var), string(mod), string(determinetype(mod, var)), sig, join(d.text, ' '), d.data[:path], d.data[:linenumber])
+        dobj = DocObj(string(var), string(mod), string(determinetype(mod, var)),
+                      sig, join(d.text, ' '), d.data[:path], d.data[:linenumber])
         push!(results, dobj)
       end
     end
+  end
+  if mod == Main
+    maincachelastupdated = time()
+    maindoccache = results
   end
   results
 end
