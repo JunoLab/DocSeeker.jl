@@ -63,7 +63,7 @@ include("fuzzaldrin.jl")
 include("introspective.jl")
 include("finddocs.jl")
 include("static.jl")
-include("db.jl")
+# include("db.jl")
 include("precompile.jl")
 
 _precompile_()
