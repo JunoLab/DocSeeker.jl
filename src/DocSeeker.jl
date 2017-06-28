@@ -65,6 +65,7 @@ include("finddocs.jl")
 include("static.jl")
 # include("db.jl")
 include("precompile.jl")
+include("documenter.jl")
 
 _precompile_()
 
