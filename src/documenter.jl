@@ -18,7 +18,7 @@ function getfiles(path, files = Tuple{String, String}[])
   files
 end
 
-function searchfiles(needle, files::Tuple{String, String})
+function searchfiles(needle, files::Vector{Tuple{String, String}})
   scores = Float64[]
 
   for (path, content) in files
@@ -33,11 +33,8 @@ searchfiles(needle, pkg::String) = searchfiles(load_documenter_docs(pkg))
 function searchfiles(needle)
   files = Tuple{String, String}[]
   for pkg in readdir(Pkg.dir())
-    @show pkg
-    isdir(pkg) || continue
-    @show pkg
+    isdir(Pkg.dir(pkg)) || continue
     append!(files, load_documenter_docs(pkg))
   end
-
   searchfiles(needle, files)
 end
