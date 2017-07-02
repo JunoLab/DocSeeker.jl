@@ -36,17 +36,17 @@ end
 
 Find all docstrings in module `mod` and it's submodules.
 """
-function alldocs(mod = Main)
+function alldocs(topmod = Main)
   global maindoccache, maincachelastupdated
 
   # main cache not regenerated more than once every 10s
-  mod == Main && time() - maincachelastupdated < 1e4 && return maindoccache
+  topmod == Main && time() - maincachelastupdated < 1e4 && return maindoccache
 
   results = DocObj[]
   # all bindings
-  modbinds = modulebindings(mod, false)
+  modbinds = modulebindings(topmod, false)
   # exported bindings only
-  exported = modulebindings(mod, true)
+  exported = modulebindings(topmod, true)
   for mod in keys(modbinds)
     meta = Docs.meta(mod)
     metanames = Set(collect(keys(meta)))
@@ -83,7 +83,7 @@ function alldocs(mod = Main)
     end
   end
   # update cache
-  if mod == Main
+  if topmod == Main
     maincachelastupdated = time()
     maindoccache = results
   end
