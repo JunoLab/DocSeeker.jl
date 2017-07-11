@@ -13,6 +13,7 @@ struct DocObj
   typ::String
   # sig::Any
   text::String
+  html::String
   path::String
   line::Int
   exported::Bool

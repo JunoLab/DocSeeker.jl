@@ -60,9 +60,11 @@ function alldocs(topmod = Main)
           d = multidoc.docs[sig]
           var = b.var
           mod = b.mod
+          text = join(d.text, ' ')
+          html = sprint(Markdown.tohtml, MIME"text/html"(), Markdown.parse(text))
           dobj = DocObj(string(var), string(mod), string(determinetype(mod, var)),
                         # sig,
-                        join(d.text, ' '), d.data[:path], d.data[:linenumber], expb)
+                        text, html, d.data[:path], d.data[:linenumber], expb)
           push!(results, dobj)
         end
       elseif !startswith(string(name), '#') && isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
@@ -71,12 +73,12 @@ function alldocs(topmod = Main)
         if !isempty(meths)
           for m in meths
             dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                          "", m.file, m.line, expb)
+                          "", "", m.file, m.line, expb)
             push!(results, dobj)
           end
         else
           dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                        "", "", 0, expb)
+                        "", "", "<unknown>", 0, expb)
           push!(results, dobj)
         end
       end
