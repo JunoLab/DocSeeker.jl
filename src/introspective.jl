@@ -1,7 +1,7 @@
 maindoccache = DocObj[]
 maincachelastupdated = 0
 
-function Base.search(needle::String; loaded = true, mod::Module = Main)
+function searchdocs(needle::String; loaded = true, mod::Module = Main, exported = false)
   if loaded
     dynamicsearch(needle, mod)
   else
@@ -9,7 +9,7 @@ function Base.search(needle::String; loaded = true, mod::Module = Main)
   end
 end
 
-function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs())
+function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs(mod))
   isempty(docs) && return ([], [])
   scores = score.(needle, docs)
   perm = sortperm(scores, rev=true)[1:min(20, length(docs))]
@@ -18,6 +18,7 @@ end
 
 function modulebindings(mod, exported = false, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
   for name in names(mod, !exported, false)
+    startswith(string(name), '#') && continue
     if isdefined(mod, name) && !Base.isdeprecated(mod, name)
       obj = getfield(mod, name)
       !haskey(binds, mod) && (binds[mod] = [])
@@ -67,7 +68,7 @@ function alldocs(topmod = Main)
                         text, html, d.data[:path], d.data[:linenumber], expb)
           push!(results, dobj)
         end
-      elseif !startswith(string(name), '#') && isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
+      elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
         bind = getfield(mod, name)
         meths = methods(bind)
         if !isempty(meths)
