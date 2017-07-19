@@ -2,10 +2,16 @@ maindoccache = DocObj[]
 maincachelastupdated = 0
 
 function searchdocs(needle::String; loaded = true, mod::Module = Main, exported = false)
-  if loaded
+  out = if loaded
     dynamicsearch(needle, mod)
   else
     dynamicsearch(needle, mod, loaddocsdb())
+  end
+  out = out[2]
+  if exported
+    filter!(x -> x.exported, out)
+  else
+    out
   end
 end
 
