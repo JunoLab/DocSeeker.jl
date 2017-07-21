@@ -55,13 +55,13 @@ function alldocs(topmod = Main)
   # exported bindings only
   exported = modulebindings(topmod, true)
   for mod in keys(modbinds)
-    topmod = module_parent(mod)
+    parentmod = module_parent(mod)
     meta = Docs.meta(mod)
     for name in modbinds[mod]
       b = Docs.Binding(mod, name)
       # figure out how to do this properly...
       expb = (haskey(exported, mod) && (name in exported[mod])) ||
-             (haskey(exported, topmod) && (name in exported[topmod]))
+             (haskey(exported, parentmod) && (name in exported[parentmod]))
 
       if haskey(meta, b)
         multidoc = meta[b]
@@ -74,20 +74,20 @@ function alldocs(topmod = Main)
                         text, html, d.data[:path], d.data[:linenumber], expb)
           push!(results, dobj)
         end
-      # elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
-      #   bind = getfield(mod, name)
-      #   meths = methods(bind)
-      #   if !isempty(meths)
-      #     for m in meths
-      #       dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-      #                     "", "", m.file, m.line, expb)
-      #       push!(results, dobj)
-      #     end
-      #   else
-      #     dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-      #                   "", "", "<unknown>", 0, expb)
-      #     push!(results, dobj)
-      #   end
+      elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
+        bind = getfield(mod, name)
+        meths = methods(bind)
+        if !isempty(meths)
+          for m in meths
+            dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+                          "", "", m.file, m.line, expb)
+            push!(results, dobj)
+          end
+        else
+          dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+                        "", "", "<unknown>", 0, expb)
+          push!(results, dobj)
+        end
       end
     end
   end
