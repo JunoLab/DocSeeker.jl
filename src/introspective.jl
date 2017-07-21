@@ -1,14 +1,14 @@
 maindoccache = DocObj[]
 maincachelastupdated = 0
 
-function searchdocs(needle::String; loaded = true, mod::Module = Main, exported = false)
+function searchdocs(needle::String; loaded = true, mod::Module = Main, exportedonly = false)
   out = if loaded
     dynamicsearch(needle, mod)
   else
     dynamicsearch(needle, mod, loaddocsdb())
   end
   out = out[2]
-  if exported
+  if exportedonly
     filter!(x -> x.exported, out)
   else
     out
@@ -22,8 +22,8 @@ function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs(mod))
   scores[perm], docs[perm]
 end
 
-function modulebindings(mod, exported = false, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
-  for name in names(mod, !exported, false)
+function modulebindings(mod, exportedonly = false, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
+  for name in names(mod, !exportedonly, !exportedonly)
     startswith(string(name), '#') && continue
     if isdefined(mod, name) && !Base.isdeprecated(mod, name)
       obj = getfield(mod, name)
@@ -31,7 +31,7 @@ function modulebindings(mod, exported = false, binds = Dict{Module, Vector{Symbo
       push!(binds[mod], name)
       if (obj isa Module) && !(obj in seenmods)
         push!(seenmods, obj)
-        modulebindings(obj, exported, binds, seenmods)
+        modulebindings(obj, exportedonly, binds, seenmods)
       end
     end
   end
@@ -47,7 +47,7 @@ function alldocs(topmod = Main)
   global maindoccache, maincachelastupdated
 
   # main cache not regenerated more than once every 10s
-  topmod == Main && time() - maincachelastupdated < 1e4 && return maindoccache
+  topmod == Main && time() - maincachelastupdated < 1e3 && return maindoccache
 
   results = DocObj[]
   # all bindings
@@ -55,39 +55,39 @@ function alldocs(topmod = Main)
   # exported bindings only
   exported = modulebindings(topmod, true)
   for mod in keys(modbinds)
+    topmod = module_parent(mod)
     meta = Docs.meta(mod)
-    metanames = Set(collect(keys(meta)))
     for name in modbinds[mod]
       b = Docs.Binding(mod, name)
-      expb = haskey(exported, mod) && name in exported[mod]
+      # figure out how to do this properly...
+      expb = (haskey(exported, mod) && (name in exported[mod])) ||
+             (haskey(exported, topmod) && (name in exported[topmod]))
 
-      if b in metanames
+      if haskey(meta, b)
         multidoc = meta[b]
         for sig in multidoc.order
           d = multidoc.docs[sig]
-          var = b.var
-          mod = b.mod
           text = join(d.text, ' ')
           html = sprint(Markdown.tohtml, MIME"text/html"(), Markdown.parse(text))
-          dobj = DocObj(string(var), string(mod), string(determinetype(mod, var)),
+          dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                         # sig,
                         text, html, d.data[:path], d.data[:linenumber], expb)
           push!(results, dobj)
         end
-      elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
-        bind = getfield(mod, name)
-        meths = methods(bind)
-        if !isempty(meths)
-          for m in meths
-            dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                          "", "", m.file, m.line, expb)
-            push!(results, dobj)
-          end
-        else
-          dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                        "", "", "<unknown>", 0, expb)
-          push!(results, dobj)
-        end
+      # elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
+      #   bind = getfield(mod, name)
+      #   meths = methods(bind)
+      #   if !isempty(meths)
+      #     for m in meths
+      #       dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+      #                     "", "", m.file, m.line, expb)
+      #       push!(results, dobj)
+      #     end
+      #   else
+      #     dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+      #                   "", "", "<unknown>", 0, expb)
+      #     push!(results, dobj)
+      #   end
       end
     end
   end
