@@ -7,9 +7,8 @@ function searchdocs(needle::String; loaded = true, mod::Module = Main, exportedo
   else
     dynamicsearch(needle, mod, loaddocsdb())
   end
-  out = out[2]
   if exportedonly
-    filter!(x -> x.exported, out)
+    filter!(x -> x[2].exported, out)
   else
     out
   end
@@ -19,7 +18,7 @@ function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs(mod))
   isempty(docs) && return ([], [])
   scores = score.(needle, docs)
   perm = sortperm(scores, rev=true)[1:min(20, length(docs))]
-  scores[perm], docs[perm]
+  [(scores[p], docs[p]) for p in perm]
 end
 
 function modulebindings(mod, exportedonly = false, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
