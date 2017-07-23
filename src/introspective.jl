@@ -1,6 +1,8 @@
 maindoccache = DocObj[]
 maincachelastupdated = 0
 
+# TODO: change `mod` argument to string or symbol, so that this actually works with the
+#       docsdb. Also potentially filter the module after searching, instead of before.
 function searchdocs(needle::String; loaded = true, mod::Module = Main, exportedonly = false)
   out = if loaded
     dynamicsearch(needle, mod)
