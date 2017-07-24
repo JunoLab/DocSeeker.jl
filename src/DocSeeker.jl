@@ -34,11 +34,16 @@ function score(needle::String, s::DocObj)
   # doc = lowercase(Docs.stripmd(Markdown.parse(s.text)))
   doc = lowercase(s.text)
 
-  score += 0.75*compare(Winkler(Jaro()), needle, binding)
-  score += 0.25*compare(TokenSet(Jaro()), lowercase(needle), doc)
+  binding_score = compare(Winkler(Jaro()), needle, binding)
+  docs_score    = compare(TokenSet(Jaro()), lowercase(needle), doc)
+
+  # bonus for exact binding match
+  binding_weight = binding_score == 1.0 ? 0.8 : 0.75
+
+  score += binding_weight*binding_score + (1 - binding_weight)*docs_score
 
   # penalty if binding has no docs
-  length(s.text) == 0 && (score *= 0.99)
+  length(s.text) == 0 && (score *= 0.98)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
 
@@ -47,7 +52,8 @@ end
 
 # rendering method
 function Juno.render(i::Juno.Inline, d::DocObj)
-  Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name), span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
+  Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
+                                span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
 end
 
 include("fuzzaldrin.jl")

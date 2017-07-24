@@ -70,7 +70,7 @@ function alldocs(topmod = Main)
           d = multidoc.docs[sig]
           text = join(d.text, ' ')
           html = sprint(Markdown.tohtml, MIME"text/html"(), Markdown.parse(text))
-          path = d.data[:path] == nothing ? "<unknow>" : d.data[:path]
+          path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
           dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                         # sig,
                         text, html, path, d.data[:linenumber], expb)
