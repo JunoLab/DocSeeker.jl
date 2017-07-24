@@ -2,12 +2,12 @@ __precompile__()
 
 module DocSeeker
 
-using StringDistances
+using StringDistances, AutoHashEquals
 using Juno, Hiccup
 
 # TODO: figure out how to get something useable out of `DocObj.sig`
 # TODO: figure out how to save `sig` and not kill serialization
-struct DocObj
+@auto_hash_equals struct DocObj
   name::String
   mod::String
   typ::String

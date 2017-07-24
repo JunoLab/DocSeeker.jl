@@ -1,5 +1,5 @@
 cache = Dict{String, Tuple{Float64, Vector{DocObj}}}()
-CACHETIMEOUT = 10 # s
+CACHETIMEOUT = 30 # s
 
 # TODO: change `mod` argument to string or symbol, so that this actually works with the
 #       docsdb. Also potentially filter the module after searching, instead of before.
@@ -93,6 +93,8 @@ function alldocs(topmod = Main)
       end
     end
   end
+  results = unique(results)
+
   # update cache
   cache[stopmod] = (time(), results)
 
