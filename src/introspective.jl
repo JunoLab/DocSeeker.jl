@@ -1,5 +1,5 @@
-maindoccache = DocObj[]
-maincachelastupdated = 0
+cache = Dict{String, Tuple{Float64, Vector{DocObj}}}()
+CACHETIMEOUT = 10 # s
 
 # TODO: change `mod` argument to string or symbol, so that this actually works with the
 #       docsdb. Also potentially filter the module after searching, instead of before.
@@ -45,10 +45,10 @@ end
 Find all docstrings in module `mod` and it's submodules.
 """
 function alldocs(topmod = Main)
-  global maindoccache, maincachelastupdated
-
-  # main cache not regenerated more than once every 10s
-  topmod == Main && time() - maincachelastupdated < 1e3 && return maindoccache
+  stopmod = string(topmod)
+  if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
+    return cache[stopmod][2]
+  end
 
   results = DocObj[]
   # all bindings
@@ -70,9 +70,10 @@ function alldocs(topmod = Main)
           d = multidoc.docs[sig]
           text = join(d.text, ' ')
           html = sprint(Markdown.tohtml, MIME"text/html"(), Markdown.parse(text))
+          path = d.data[:path] == nothing ? "<unknow>" : d.data[:path]
           dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                         # sig,
-                        text, html, d.data[:path], d.data[:linenumber], expb)
+                        text, html, path, d.data[:linenumber], expb)
           push!(results, dobj)
         end
       elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
@@ -93,10 +94,7 @@ function alldocs(topmod = Main)
     end
   end
   # update cache
-  if topmod == Main
-    maincachelastupdated = time()
-    maindoccache = results
-  end
+  cache[stopmod] = (time(), results)
 
   return results
 end
