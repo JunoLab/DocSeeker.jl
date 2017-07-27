@@ -56,6 +56,10 @@ function Juno.render(i::Juno.Inline, d::DocObj)
                                 span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
 end
 
+# this is iffy.
+Base.show(io::IO, m::MIME"text/html", x::Markdown.LaTeX) =
+  print(io, "<span class=\"latex\">$(x.formula)</span>")
+
 include("fuzzaldrin.jl")
 include("introspective.jl")
 include("finddocs.jl")
