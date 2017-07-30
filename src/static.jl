@@ -1,6 +1,8 @@
 const dbpath = joinpath(@__DIR__, "..", "db", "usingdb")
 const lockpath = joinpath(@__DIR__, "..", "db", "usingdb.lock")
 
+DOCDBCACHE = DocObj[]
+
 function _createdocsdb()
   isfile(lockpath) && return
 
@@ -43,6 +45,12 @@ Retrieve the docstrings from the "database" created by `createdocsdb()`. Will re
 vector if the database is locked by `createdocsdb()`.
 """
 function loaddocsdb()
+  global DOCDBCACHE
+  isempty(DOCDBCACHE) && (DOCDBCACHE = _loaddocsdb())
+  DOCDBCACHE
+end
+
+function _loaddocsdb()
   (isfile(lockpath) || !isfile(dbpath)) && return DocObj[]
   open(dbpath, "r") do io
     deserialize(io)
