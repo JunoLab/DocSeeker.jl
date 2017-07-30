@@ -30,8 +30,6 @@ function score(needle::String, s::DocObj)
   length(needle) == 0 && return score
 
   binding = s.name
-  # TODO: figure out why this sometimes throws a `MethodError: no method matching stripmd(::Symbol)`
-  # doc = lowercase(Docs.stripmd(Markdown.parse(s.text)))
   doc = lowercase(s.text)
 
   binding_score = compare(Winkler(Jaro()), needle, binding)
