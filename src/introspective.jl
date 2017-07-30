@@ -18,7 +18,10 @@ end
 
 function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs(mod))
   isempty(docs) && return ([], [])
-  scores = score.(needle, docs)
+  scores = zeros(size(docs))
+  Threads.@threads for i in eachindex(docs)
+    scores[i] = score(needle, docs[i])
+  end
   perm = sortperm(scores, rev=true)[1:min(20, length(docs))]
   [(scores[p], docs[p]) for p in perm]
 end
@@ -68,8 +71,9 @@ function alldocs(topmod = Main)
         multidoc = meta[b]
         for sig in multidoc.order
           d = multidoc.docs[sig]
-          text = join(d.text, ' ')
-          html = sprint(Markdown.tohtml, MIME"text/html"(), Markdown.parse(text))
+          text = Markdown.parse(join(d.text, ' '))
+          html = sprint(Markdown.tohtml, MIME"text/html"(), text)
+          text = lowercase(Docs.stripmd(text))
           path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
           dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                         # sig,
