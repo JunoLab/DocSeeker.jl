@@ -13,7 +13,7 @@ using Juno, Hiccup
   typ::String
   # sig::Any
   text::String
-  html::String
+  html::Hiccup.Node
   path::String
   line::Int
   exported::Bool
@@ -30,10 +30,9 @@ function score(needle::String, s::DocObj)
   length(needle) == 0 && return score
 
   binding = s.name
-  doc = lowercase(s.text)
 
   binding_score = compare(Winkler(Jaro()), needle, binding)
-  docs_score    = compare(TokenSort(Jaro()), lowercase(needle), doc)
+  docs_score    = compare(TokenSort(Jaro()), lowercase(needle), lowercase(s.text))
 
   # bonus for exact binding match
   binding_weight = binding_score == 1.0 ? 0.8 : 0.75
@@ -55,8 +54,7 @@ function Juno.render(i::Juno.Inline, d::DocObj)
 end
 
 # this is iffy.
-Base.show(io::IO, m::MIME"text/html", x::Markdown.LaTeX) =
-  print(io, "<span class=\"latex\">$(x.formula)</span>")
+Base.show(io::IO, m::MIME"text/html", x::Markdown.LaTeX) = print(io, "<span class=\"latex\">$(x.formula)</span>")
 
 include("fuzzaldrin.jl")
 include("introspective.jl")
@@ -65,6 +63,7 @@ include("static.jl")
 # include("db.jl")
 include("precompile.jl")
 include("documenter.jl")
+include("render.jl")
 
 _precompile_()
 

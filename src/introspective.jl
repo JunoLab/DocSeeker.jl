@@ -72,7 +72,7 @@ function alldocs(topmod = Main)
         for sig in multidoc.order
           d = multidoc.docs[sig]
           text = Markdown.parse(join(d.text, ' '))
-          html = sprint(Markdown.tohtml, MIME"text/html"(), text)
+          html = renderMD(text)
           # TODO: might sometimes throw a `MethodError: no method matching stripmd(::Symbol)`
           text = lowercase(Docs.stripmd(text))
           path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
@@ -87,12 +87,12 @@ function alldocs(topmod = Main)
         if !isempty(meths)
           for m in meths
             dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                          "", "", m.file, m.line, expb)
+                          "", Hiccup.div(), m.file, m.line, expb)
             push!(results, dobj)
           end
         else
           dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                        "", "", "<unknown>", 0, expb)
+                        "", Hiccup.div(), "<unknown>", 0, expb)
           push!(results, dobj)
         end
       end
