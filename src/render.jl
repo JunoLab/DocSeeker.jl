@@ -45,12 +45,16 @@ function renderMD(md::Markdown.Admonition)
 end
 
 function renderMD(md::Markdown.List)
-    Hiccup.Node(Markdown.isordered(md) ? :ol : :ul, [Hiccup.li(item) for item in md.items],
-                start = md.ordered > 1 ? string(md.ordered) : "")
+  Hiccup.Node(Markdown.isordered(md) ? :ol : :ul, [Hiccup.li(renderMD(item)) for item in md.items],
+              start = md.ordered > 1 ? string(md.ordered) : "")
 end
 
 function renderMD(md::Markdown.HorizontalRule)
   Hiccup.Node(:hr)
+end
+
+function renderMD(link::Markdown.Link)
+  Hiccup.Node(:a, renderMDinline(link.text), href = link.url)
 end
 
 
@@ -116,6 +120,6 @@ function renderMDinline(md::Markdown.LaTeX)
   Hiccup.span(md.formula, class = "latex inline")
 end
 
-function renderMDinline(io::IO, br::Markdown.LineBreak)
+function renderMDinline(br::Markdown.LineBreak)
   Hiccup.Node(:br)
 end
