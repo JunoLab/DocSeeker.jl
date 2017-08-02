@@ -27,21 +27,17 @@ function renderMD(md::Markdown.LaTeX)
 end
 
 function renderMD(f::Markdown.Footnote)
-    # withtag(io, :div, :class => "footnote", :id => "footnote-$(f.id)") do
-    #     withtag(io, :p, :class => "footnote-title") do
-    #         print(io, f.id)
-    #     end
-    #     html(io, f.text)
-    # end
+  Hiccup.div([
+    Hiccup.Node(:p, f.id, class = "footnote-title"),
+    renderMD(f.text)
+  ], class = "footnote", id = "footnote-$(f.id)")
 end
 
 function renderMD(md::Markdown.Admonition)
-    # withtag(io, :div, :class => "admonition $(md.category)") do
-    #     withtag(io, :p, :class => "admonition-title") do
-    #         print(io, md.title)
-    #     end
-    #     html(io, md.content)
-    # end
+  Hiccup.div([
+    Hiccup.Node(:p, md.title, class = "admonition-title"),
+    renderMD(md.content)
+  ], class = "admonition $(md.category)")
 end
 
 function renderMD(md::Markdown.List)
@@ -55,21 +51,6 @@ end
 
 function renderMD(link::Markdown.Link)
   Hiccup.Node(:a, renderMDinline(link.text), href = link.url)
-end
-
-
-function html(io::IO, md::Markdown.Table)
-    withtag(io, :table) do
-        for (i, row) in enumerate(md.rows)
-            withtag(io, :tr) do
-                for c in md.rows[i]
-                    withtag(io, i == 1 ? :th : :td) do
-                        htmlinline(io, c)
-                    end
-                end
-            end
-        end
-    end
 end
 
 function renderMD(md::Markdown.Table)
@@ -90,8 +71,7 @@ function renderMDinline(code::Markdown.Code)
 end
 
 function renderMDinline(md::Union{Symbol,AbstractString})
-  md
-    # htmlesc(io, md)
+  md # htmlesc?
 end
 
 function renderMDinline(md::Markdown.Bold)
@@ -107,9 +87,7 @@ function renderMDinline(md::Markdown.Image)
 end
 
 function renderMDinline(f::Markdown.Footnote)
-    # withtag(io, :a, :href => "#footnote-$(f.id)", :class => "footnote") do
-    #     print(io, "[", f.id, "]")
-    # end
+  Hiccup.Node(:a, Hiccup.span("[$(f.id)]"), href = "#footnote-$(f.id)", class => "footnote")
 end
 
 function renderMDinline(link::Markdown.Link)
