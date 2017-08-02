@@ -1,6 +1,6 @@
 julia 0.6
-Juno
 Hiccup
 StringDistances
 URIParser
 AutoHashEquals
+Requires

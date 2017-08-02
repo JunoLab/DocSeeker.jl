@@ -3,8 +3,7 @@ renderMD(md::Markdown.MD) = renderMD(md.content)
 renderMD(md::Vector) = Hiccup.div([renderMD(x) for x in md], class = "markdown")
 
 function renderMD{l}(header::Markdown.Header{l})
-  Hiccup.Node(Symbol(:h, l), renderMDinline(header.text))
-end
+  Hiccup.Node(Symbol(:h, l), renderMDinline(header.text)) end
 
 function renderMD(code::Markdown.Code)
   Hiccup.pre(

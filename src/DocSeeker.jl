@@ -2,8 +2,7 @@ __precompile__()
 
 module DocSeeker
 
-using StringDistances, AutoHashEquals
-using Juno, Hiccup
+using StringDistances, AutoHashEquals, Hiccup, Requires
 
 # TODO: figure out how to get something useable out of `DocObj.sig`
 # TODO: figure out how to save `sig` and not kill serialization
@@ -47,14 +46,22 @@ function score(needle::String, s::DocObj)
   return score
 end
 
-# rendering method
-function Juno.render(i::Juno.Inline, d::DocObj)
-  Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
-                                span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
-end
+# improved rendering if used in Atom:
+@require Juno begin
+  Juno.render(i::Juno.Inline, md::Base.Markdown.MD) = Juno.render(i, renderMD(md))
 
-# this is iffy.
-Base.show(io::IO, m::MIME"text/html", x::Markdown.LaTeX) = print(io, "<span class=\"latex\">$(x.formula)</span>")
+  function Juno.render(e::Juno.Editor, md::Base.Markdown.MD)
+    mds = Atom.CodeTools.flatten(md)
+    out = length(mds) == 1 ? Text(chomp(sprint(show, MIME"text/markdown"(), md))) :
+                             Juno.Tree(Text("MD"), [Juno.render(e, renderMD(md))])
+    Juno.render(e, out)
+  end
+
+  function Juno.render(i::Juno.Inline, d::DocObj)
+    Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
+                                  span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
+  end
+end
 
 include("fuzzaldrin.jl")
 include("introspective.jl")
@@ -63,7 +70,7 @@ include("static.jl")
 # include("db.jl")
 include("precompile.jl")
 include("documenter.jl")
-include("render.jl")
+include("rendermd.jl")
 
 _precompile_()
 
