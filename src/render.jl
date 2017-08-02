@@ -9,7 +9,8 @@ end
 function renderMD(code::Markdown.Code)
   Hiccup.pre(
     Hiccup.code(code.code,
-                class = !isempty(code.language) ? "language-$(code.language)" : ""
+                class = !isempty(code.language) ? "language-$(code.language)" : "julia",
+                block = true
     )
   )
 end
@@ -23,7 +24,7 @@ function renderMD(md::Markdown.BlockQuote)
 end
 
 function renderMD(md::Markdown.LaTeX)
-  Hiccup.div(md.formula, class = "latex block")
+  Hiccup.div(latex2katex(md.formula), class = "latex block")
 end
 
 function renderMD(f::Markdown.Footnote)
@@ -67,7 +68,9 @@ function renderMDinline(content::Vector)
 end
 
 function renderMDinline(code::Markdown.Code)
-  Hiccup.code(code.code) # htmlesc?
+  Hiccup.code(code.code,
+              class = !isempty(code.language) ? "language-$(code.language)" : "julia",
+              block = false) # htmlesc?
 end
 
 function renderMDinline(md::Union{Symbol,AbstractString})
@@ -95,9 +98,16 @@ function renderMDinline(link::Markdown.Link)
 end
 
 function renderMDinline(md::Markdown.LaTeX)
-  Hiccup.span(md.formula, class = "latex inline")
+  Hiccup.span(latex2katex(md.formula), class = "latex inline")
 end
 
 function renderMDinline(br::Markdown.LineBreak)
   Hiccup.Node(:br)
+end
+
+# katex doesn't support certain latex expressions. Need to transform those to something
+# that *is* supported or get rid of them altogether.
+function latex2katex(code)
+  code = replace(code, "\\operatorname", "\\mathrm")
+  code
 end
