@@ -55,7 +55,7 @@ end
 
 function renderMD(md::Markdown.Table)
   Hiccup.table([
-    [Hiccup.tr(Hiccup.Node(i == 1 ? :th : :td, renderMDinline(c))) for c in row]
+    Hiccup.tr([Hiccup.Node(i == 1 ? :th : :td, renderMDinline(c)) for c in row])
     for (i, row) in enumerate(md.rows)
   ])
 end
