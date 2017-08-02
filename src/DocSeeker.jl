@@ -48,18 +48,26 @@ end
 
 # improved rendering if used in Atom:
 @require Juno begin
-  Juno.render(i::Juno.Inline, md::Base.Markdown.MD) = Juno.render(i, renderMD(md))
+  @require Atom begin
 
-  function Juno.render(e::Juno.Editor, md::Base.Markdown.MD)
-    mds = Atom.CodeTools.flatten(md)
-    out = length(mds) == 1 ? Text(chomp(sprint(show, MIME"text/markdown"(), md))) :
-                             Juno.Tree(Text("MD"), [Juno.render(e, renderMD(md))])
-    Juno.render(e, out)
-  end
+    Juno.render(i::Juno.Inline, md::Base.Markdown.MD) = Juno.render(i, renderMD(md))
 
-  function Juno.render(i::Juno.Inline, d::DocObj)
-    Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
-                                  span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
+    function Juno.render(e::Juno.Editor, md::Base.Markdown.MD)
+      mds = Atom.CodeTools.flatten(md)
+      out = length(mds) == 1 ? Text(chomp(sprint(show, MIME"text/markdown"(), md))) :
+                               Juno.Tree(Text("MD"), [Juno.render(e, renderMD(md))])
+      Juno.render(e, out)
+    end
+
+    function Juno.render(i::Juno.Inline, d::DocObj)
+      Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
+                                    span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
+    end
+
+    Atom.view(n::Hiccup.Node{:latex}) =
+      Dict(:type  => :latex,
+           :attrs => n.attrs,
+           :text  => join(n.children, ' '))
   end
 end
 

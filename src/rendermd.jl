@@ -23,7 +23,7 @@ function renderMD(md::Markdown.BlockQuote)
 end
 
 function renderMD(md::Markdown.LaTeX)
-  Hiccup.div(latex2katex(md.formula), class = "latex block")
+  Hiccup.Node(:latex, latex2katex(md.formula), class = "latex block", block = true)
 end
 
 function renderMD(f::Markdown.Footnote)
@@ -97,7 +97,7 @@ function renderMDinline(link::Markdown.Link)
 end
 
 function renderMDinline(md::Markdown.LaTeX)
-  Hiccup.span(latex2katex(md.formula), class = "latex inline")
+  Hiccup.Node(:latex, latex2katex(md.formula), class = "latex inline", block = false)
 end
 
 function renderMDinline(br::Markdown.LineBreak)
