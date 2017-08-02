@@ -87,7 +87,7 @@ function renderMDinline(md::Markdown.Image)
 end
 
 function renderMDinline(f::Markdown.Footnote)
-  Hiccup.Node(:a, Hiccup.span("[$(f.id)]"), href = "#footnote-$(f.id)", class => "footnote")
+  Hiccup.Node(:a, Hiccup.span("[$(f.id)]"), href = "#footnote-$(f.id)", class = "footnote")
 end
 
 function renderMDinline(link::Markdown.Link)
