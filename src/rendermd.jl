@@ -34,8 +34,13 @@ function renderMD(f::Markdown.Footnote)
 end
 
 function renderMD(md::Markdown.Admonition)
+  icon = if md.category == "note" || md.category == "tip"
+    "icon-italic"
+  elseif md.category == "warning"
+    "icon-alert"
+  end
   Hiccup.div([
-    Hiccup.Node(:p, md.title, class = "admonition-title"),
+    Hiccup.Node(:p, md.title, class = "admonition-title icon-italic"),
     renderMD(md.content)
   ], class = "admonition $(md.category)")
 end
@@ -108,5 +113,6 @@ end
 # that *is* supported or get rid of them altogether.
 function latex2katex(code)
   code = replace(code, "\\operatorname", "\\mathrm")
+  code = replace(code, "\\latex", "\\katex")
   code
 end
