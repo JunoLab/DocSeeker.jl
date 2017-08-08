@@ -36,6 +36,15 @@ function docsdir(pkg)
   return isfile(readmepath) ? readmepath : ""
 end
 
+function readmepath(pkg)
+  lowercase(pkg == base) && return ""
+
+  pkgpath = Pkg.dir(pkg)
+  # package not installed
+  isdir(pkgpath) || return ""
+  joinpath(pkgpath, "README.md")
+end
+
 """
     docsurl(pkg) -> String
 
