@@ -46,6 +46,17 @@ function score(needle::String, s::DocObj)
   return score
 end
 
+# console rendering
+function Base.show(io::IO, d::DocObj)
+  println(io, string(d.mod, '.', d.name, " @$(d.path):$(d.line)"))
+end
+
+function Base.show(io::IO, ::MIME"text/plain", d::DocObj)
+  println(io, string(d.mod, '.', d.name, " @$(d.path):$(d.line)"))
+  println(io)
+  println(io, d.text)
+end
+
 # improved rendering if used in Atom:
 @require Juno begin
   @require Atom begin
