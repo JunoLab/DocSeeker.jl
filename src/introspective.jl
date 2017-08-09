@@ -26,12 +26,12 @@ function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs(mod))
   [(scores[p], docs[p]) for p in perm]
 end
 
-function modulebindings(mod, exportedonly = false, binds = Dict{Module, Vector{Symbol}}(), seenmods = Set{Module}())
+function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symbol}}(), seenmods = Set{Module}())
   for name in names(mod, !exportedonly, !exportedonly)
     startswith(string(name), '#') && continue
     if isdefined(mod, name) && !Base.isdeprecated(mod, name)
       obj = getfield(mod, name)
-      !haskey(binds, mod) && (binds[mod] = [])
+      !haskey(binds, mod) && (binds[mod] = Set{Symbol}())
       push!(binds[mod], name)
       if (obj isa Module) && !(obj in seenmods)
         push!(seenmods, obj)
@@ -49,9 +49,9 @@ Find all docstrings in module `mod` and it's submodules.
 """
 function alldocs(topmod = Main)
   stopmod = string(topmod)
-  if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
-    return cache[stopmod][2]
-  end
+  # if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
+  #   return cache[stopmod][2]
+  # end
 
   results = DocObj[]
   # all bindings
@@ -61,40 +61,53 @@ function alldocs(topmod = Main)
   for mod in keys(modbinds)
     parentmod = module_parent(mod)
     meta = Docs.meta(mod)
+
+    for b in keys(meta)
+      expb = false
+      if haskey(exported, mod) && haskey(modbinds, mod)
+        expb = b.var in exported[mod]
+        # kick everything out that is handled by the docsystem
+        delete!(modbinds[mod], b)
+        delete!(exported[mod], b)
+      end
+
+      multidoc = meta[b]
+      for sig in multidoc.order
+        d = multidoc.docs[sig]
+        text = Markdown.parse(join(d.text, ' '))
+        html = renderMD(text)
+        # TODO: might sometimes throw a `MethodError: no method matching stripmd(::Symbol)`
+        text = lowercase(Docs.stripmd(text))
+        path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
+        dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
+                      # sig,
+                      text, html, path, d.data[:linenumber], expb)
+
+        push!(results, dobj)
+      end
+    end
+
     for name in modbinds[mod]
       b = Docs.Binding(mod, name)
+
       # figure out how to do this properly...
       expb = (haskey(exported, mod) && (name in exported[mod])) ||
              (haskey(exported, parentmod) && (name in exported[parentmod]))
 
-      if haskey(meta, b)
-        multidoc = meta[b]
-        for sig in multidoc.order
-          d = multidoc.docs[sig]
-          text = Markdown.parse(join(d.text, ' '))
-          html = renderMD(text)
-          # TODO: might sometimes throw a `MethodError: no method matching stripmd(::Symbol)`
-          text = lowercase(Docs.stripmd(text))
-          path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
-          dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
-                        # sig,
-                        text, html, path, d.data[:linenumber], expb)
-          push!(results, dobj)
-        end
-      elseif isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
+      if isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
         bind = getfield(mod, name)
-        meths = methods(bind)
-        if !isempty(meths)
-          for m in meths
-            dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                          "", Hiccup.div(), m.file, m.line, expb)
-            push!(results, dobj)
-          end
-        else
+        # meths = methods(bind)
+        # if !isempty(meths)
+        #   for m in meths
+        #     dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+        #                   "", Hiccup.div(), m.file, m.line, expb)
+        #     push!(results, dobj)
+        #   end
+        # else
           dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
                         "", Hiccup.div(), "<unknown>", 0, expb)
           push!(results, dobj)
-        end
+        # end
       end
     end
   end
