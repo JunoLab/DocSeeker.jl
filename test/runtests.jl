@@ -17,6 +17,9 @@ end
 # @test firstN(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
 @test firstN(dynamicsearch("sine"), ["sin", "sind", "asin"], 20)
 
+@test dynamicsearch("Real")[1][2].name == "Real"
+@test length(dynamicsearch("Real")[1][2].text) > 0
+
 DocSeeker._createdocsdb()
 @test isfile(DocSeeker.dbpath)
 @test !isempty(DocSeeker.loaddocsdb())
