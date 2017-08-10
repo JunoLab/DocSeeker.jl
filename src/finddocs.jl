@@ -37,7 +37,7 @@ function docsdir(pkg)
 end
 
 function readmepath(pkg)
-  lowercase(pkg == base) && return ""
+  (lowercase(pkg) == base) && return ""
 
   pkgpath = Pkg.dir(pkg)
   # package not installed
