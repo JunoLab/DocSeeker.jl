@@ -9,6 +9,8 @@ function searchdocs(needle::String; loaded = true, mod = "Main", exportedonly = 
   else
     dynamicsearch(needle, mod, loaddocsdb())
   end
+  
+  isempty(out) && return out
   if exportedonly
     if mod ≠ "Main"
       filter!(x -> x[2].exported && x[2].mod == mod, out)
@@ -25,7 +27,7 @@ function searchdocs(needle::String; loaded = true, mod = "Main", exportedonly = 
 end
 
 function dynamicsearch(needle::String, mod = "Main", docs = alldocs())
-  isempty(docs) && return ([], [])
+  (isempty(docs) || isempty(needle)) && return []
   scores = zeros(size(docs))
   Threads.@threads for i in eachindex(docs)
     scores[i] = score(needle, docs[i])
