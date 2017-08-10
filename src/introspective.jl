@@ -9,7 +9,7 @@ function searchdocs(needle::String; loaded = true, mod = "Main", exportedonly = 
   else
     dynamicsearch(needle, mod, loaddocsdb())
   end
-  
+
   isempty(out) && return out
   if exportedonly
     if mod ≠ "Main"

@@ -90,6 +90,7 @@ include("static.jl")
 include("precompile.jl")
 include("documenter.jl")
 include("rendermd.jl")
+include("moduleinfo.jl")
 
 _precompile_()
 
