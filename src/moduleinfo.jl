@@ -10,7 +10,7 @@ function packageinfo(mod)
 end
 
 function moduleinfo(mod)
-  "ho"
+  Hiccup.div("I'm the module \"$mod\".")
 end
 
 getmoduleinfo(mod) = ispackage(mod) ? packageinfo(mod) : moduleinfo(mod)
