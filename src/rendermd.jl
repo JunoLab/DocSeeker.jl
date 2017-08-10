@@ -113,5 +113,8 @@ end
 function latex2katex(code)
   code = replace(code, "\\operatorname", "\\mathrm")
   code = replace(code, "\\latex", "\\katex")
+  # TODO: Unicode -> LaTeX sequences.
+  # KaTeX unfortunately doesn't handle Unicode very well, so something like π errors. Should
+  # be possible to transform that to \pi in many simple cases.
   code
 end
