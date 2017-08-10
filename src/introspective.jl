@@ -3,20 +3,28 @@ CACHETIMEOUT = 30 # s
 
 # TODO: change `mod` argument to string or symbol, so that this actually works with the
 #       docsdb. Also potentially filter the module after searching, instead of before.
-function searchdocs(needle::String; loaded = true, mod::Module = Main, exportedonly = false)
+function searchdocs(needle::String; loaded = true, mod = "Main", exportedonly = false)
   out = if loaded
     dynamicsearch(needle, mod)
   else
     dynamicsearch(needle, mod, loaddocsdb())
   end
   if exportedonly
-    filter!(x -> x[2].exported, out)
+    if mod ≠ "Main"
+      filter!(x -> x[2].exported && x[2].mod == mod, out)
+    else
+      filter!(x -> x[2].exported, out)
+    end
   else
-    out
+    if mod ≠ "Main"
+      filter!(x -> x[2].mod == mod, out)
+    else
+      out
+    end
   end
 end
 
-function dynamicsearch(needle::String, mod::Module = Main, docs = alldocs(mod))
+function dynamicsearch(needle::String, mod = "Main", docs = alldocs())
   isempty(docs) && return ([], [])
   scores = zeros(size(docs))
   Threads.@threads for i in eachindex(docs)
@@ -43,11 +51,12 @@ function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symb
 end
 
 """
-    alldocs(mod = Main) -> Vector{DocObj}
+    alldocs() -> Vector{DocObj}
 
 Find all docstrings in module `mod` and it's submodules.
 """
-function alldocs(topmod = Main)
+function alldocs()
+  topmod = Main
   stopmod = string(topmod)
   # if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
   #   return cache[stopmod][2]
@@ -58,18 +67,20 @@ function alldocs(topmod = Main)
   modbinds = modulebindings(topmod, false)
   # exported bindings only
   exported = modulebindings(topmod, true)
+
   for mod in keys(modbinds)
     parentmod = module_parent(mod)
     meta = Docs.meta(mod)
 
     for b in keys(meta)
-      expb = false
       if haskey(exported, mod) && haskey(modbinds, mod)
-        expb = b.var in exported[mod]
         # kick everything out that is handled by the docsystem
         delete!(modbinds[mod], b)
         delete!(exported[mod], b)
       end
+
+      expb = (haskey(exported, mod) && (b.var in exported[mod])) ||
+             (haskey(exported, parentmod) && (b.var in exported[parentmod]))
 
       multidoc = meta[b]
       for sig in multidoc.order
@@ -87,6 +98,7 @@ function alldocs(topmod = Main)
       end
     end
 
+    # resolve everything that is not caught by the docsystem
     for name in modbinds[mod]
       b = Docs.Binding(mod, name)
 
@@ -95,7 +107,8 @@ function alldocs(topmod = Main)
              (haskey(exported, parentmod) && (name in exported[parentmod]))
 
       if isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
-        bind = getfield(mod, name)
+        # TODO: For now we don't need this -> free 50% speed up.
+        # bind = getfield(mod, name)
         # meths = methods(bind)
         # if !isempty(meths)
         #   for m in meths
