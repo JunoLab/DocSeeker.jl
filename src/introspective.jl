@@ -60,9 +60,9 @@ Find all docstrings in module `mod` and it's submodules.
 function alldocs()
   topmod = Main
   stopmod = string(topmod)
-  # if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
-  #   return cache[stopmod][2]
-  # end
+  if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
+    return cache[stopmod][2]
+  end
 
   results = DocObj[]
   # all bindings
