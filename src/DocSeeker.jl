@@ -2,6 +2,8 @@ __precompile__()
 
 module DocSeeker
 
+export searchdocs
+
 using StringDistances, AutoHashEquals, Hiccup, Requires
 
 # TODO: figure out how to get something useable out of `DocObj.sig`
