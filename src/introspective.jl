@@ -1,4 +1,4 @@
-cache = Dict{String, Tuple{Float64, Vector{DocObj}}}()
+CACHE = Dict{String, Tuple{Float64, Vector{DocObj}}}()
 CACHETIMEOUT = 30 # s
 
 # TODO: change `mod` argument to string or symbol, so that this actually works with the
@@ -60,8 +60,8 @@ Find all docstrings in module `mod` and it's submodules.
 function alldocs()
   topmod = Main
   stopmod = string(topmod)
-  if haskey(cache, stopmod) && (time() - cache[stopmod][1]) < CACHETIMEOUT
-    return cache[stopmod][2]
+  if haskey(CACHE, stopmod) && (time() - CACHE[stopmod][1]) < CACHETIMEOUT
+    return CACHE[stopmod][2]
   end
 
   results = DocObj[]
@@ -129,7 +129,7 @@ function alldocs()
   results = unique(results)
 
   # update cache
-  cache[stopmod] = (time(), results)
+  CACHE[stopmod] = (time(), results)
 
   return results
 end
