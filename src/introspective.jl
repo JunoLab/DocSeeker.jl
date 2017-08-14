@@ -20,19 +20,21 @@ function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
   perm = sortperm(scores, rev=true)
   out = [(scores[p], docs[p]) for p in perm]
 
-  out = if exportedonly
+  f = if exportedonly
     if mod ≠ "Main"
-      filter!(x -> x[2].exported && x[2].mod == mod, out)
+      x -> x[2].exported && x[2].mod == mod
     else
-      filter!(x -> x[2].exported, out)
+      x -> x[2].exported
     end
   else
     if mod ≠ "Main"
-      filter!(x -> x[2].mod == mod, out)
+      x -> x[2].mod == mod
     else
-      out
+      x -> true
     end
   end
+
+  filter!(f, out)
 
   out[1:min(length(out), maxreturns)]
 end
