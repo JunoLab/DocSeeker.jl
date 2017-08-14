@@ -70,16 +70,16 @@ function alldocs()
   # exported bindings only
   exported = modulebindings(topmod, true)
 
+  # loop over all loaded modules
   for mod in keys(modbinds)
     parentmod = module_parent(mod)
     meta = Docs.meta(mod)
 
+    # loop over all names handled by the docsystem
     for b in keys(meta)
-      if haskey(exported, mod) && haskey(modbinds, mod)
-        # kick everything out that is handled by the docsystem
-        delete!(modbinds[mod], b)
-        delete!(exported[mod], b)
-      end
+      # kick everything out that is handled by the docsystem
+      haskey(modbinds, mod) && delete!(modbinds[mod], b.var)
+      haskey(exported, mod) && delete!(exported[mod], b.var)
 
       expb = (haskey(exported, mod) && (b.var in exported[mod])) ||
              (haskey(exported, parentmod) && (b.var in exported[parentmod]))
@@ -89,8 +89,7 @@ function alldocs()
         d = multidoc.docs[sig]
         text = Markdown.parse(join(d.text, ' '))
         html = renderMD(text)
-        # TODO: might sometimes throw a `MethodError: no method matching stripmd(::Symbol)`
-        text = lowercase(Docs.stripmd(text))
+        text = Docs.stripmd(text)
         path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
         dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                       # sig,
@@ -109,7 +108,7 @@ function alldocs()
              (haskey(exported, parentmod) && (name in exported[parentmod]))
 
       if isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
-        # TODO: For now we don't need this -> free 50% speed up.
+        # TODO: For now we don't need this -> free 50% speedup.
         # bind = getfield(mod, name)
         # meths = methods(bind)
         # if !isempty(meths)

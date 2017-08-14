@@ -13,12 +13,21 @@ function firstN(matches, desired, N = 3)
   return true
 end
 
-# get rid of `[2]` once dynamicsearch stops returning the score
-# @test firstN(dynamicsearch("precompilation")[2], ["compilecache", "__precompile__", "precompile"])
 @test firstN(dynamicsearch("sine"), ["sin", "sind", "asin"], 20)
 
 @test dynamicsearch("Real")[1][2].name == "Real"
 @test length(dynamicsearch("Real")[1][2].text) > 0
+
+let downloadsearch = dynamicsearch("download")
+  dfound = 0
+  for d in downloadsearch
+    if d[2].name == "download" && d[2].mod == "Base"
+      dfound += 1
+    end
+  end
+  @test dfound == 1
+end
+
 
 DocSeeker._createdocsdb()
 @test isfile(DocSeeker.dbpath)
