@@ -15,6 +15,8 @@ end
 
 @test firstN(dynamicsearch("sine"), ["sin", "sind", "asin"], 20)
 
+@test firstN(dynamicsearch("regular expression"), ["match", "eachmatch", "search"], 20)
+
 @test dynamicsearch("Real")[1][2].name == "Real"
 @test length(dynamicsearch("Real")[1][2].text) > 0
 
