@@ -32,8 +32,9 @@ function score(needle::String, s::DocObj)
 
   binding = s.name
 
-  binding_score = compare(Winkler(Jaro()), needle, binding)
-  docs_score    = compare(TokenSort(Jaro()), lowercase(needle), lowercase(s.text))
+  needles = split(needle, ' ')
+  binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, binding)
+  docs_score    = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
 
   # bonus for exact binding match
   binding_weight = binding_score == 1.0 ? 0.8 : 0.75
