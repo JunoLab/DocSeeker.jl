@@ -1,17 +1,26 @@
 CACHE = Dict{String, Tuple{Float64, Vector{DocObj}}}()
 CACHETIMEOUT = 30 # s
 
-# TODO: change `mod` argument to string or symbol, so that this actually works with the
-#       docsdb. Also potentially filter the module after searching, instead of before.
-function searchdocs(needle::String; loaded = true, mod = "Main", exportedonly = false)
-  out = if loaded
-    dynamicsearch(needle, mod)
-  else
-    dynamicsearch(needle, mod, loaddocsdb())
-  end
+MAX_RETURN_SIZE = 20 # how many results to return at most
 
-  isempty(out) && return out
-  if exportedonly
+
+function searchdocs(needle::String; loaded = true, mod = "Main",
+                    maxreturns = MAX_RETURN_SIZE, exportedonly = false)
+  loaded ? dynamicsearch(needle, mod, exportedonly, maxreturns) :
+           dynamicsearch(needle, mod, exportedonly, maxreturns, loaddocsdb())
+end
+
+function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
+                       maxreturns = MAX_RETURN_SIZE, docs = alldocs())
+  isempty(docs) && return []
+  scores = zeros(size(docs))
+  Threads.@threads for i in eachindex(docs)
+    scores[i] = score(needle, docs[i])
+  end
+  perm = sortperm(scores, rev=true)
+  out = [(scores[p], docs[p]) for p in perm]
+
+  out = if exportedonly
     if mod ≠ "Main"
       filter!(x -> x[2].exported && x[2].mod == mod, out)
     else
@@ -24,16 +33,8 @@ function searchdocs(needle::String; loaded = true, mod = "Main", exportedonly = 
       out
     end
   end
-end
 
-function dynamicsearch(needle::String, mod = "Main", docs = alldocs())
-  (isempty(docs) || isempty(needle)) && return []
-  scores = zeros(size(docs))
-  Threads.@threads for i in eachindex(docs)
-    scores[i] = score(needle, docs[i])
-  end
-  perm = sortperm(scores, rev=true)[1:min(20, length(docs))]
-  [(scores[p], docs[p]) for p in perm]
+  out[1:min(length(out), maxreturns)]
 end
 
 function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symbol}}(), seenmods = Set{Module}())

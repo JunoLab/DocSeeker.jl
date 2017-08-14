@@ -8,7 +8,7 @@ function renderMD{l}(header::Markdown.Header{l})
 function renderMD(code::Markdown.Code)
   Hiccup.pre(
     Hiccup.code(code.code,
-                class = !isempty(code.language) ? "language-$(code.language)" : "julia",
+                class = !isempty(code.language) ? code.language : "julia",
                 block = true
     )
   )
