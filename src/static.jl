@@ -10,21 +10,46 @@ function _createdocsdb()
     println(io, "locked")
   end
 
-  # TODO: try looking for packages *not* in Pkg.dir()
-  for pkg in readdir(Pkg.dir())
-    @eval begin
-      try
-        using $(Symbol(pkg))
+  try
+    isfile(dbpath) && rm(dbpath)
+
+    pkgs = keys(Pkg.installed())
+    if isdefined(Main, :Juno) && Juno.isactive()
+      Juno.progress(name="Documentation Cache") do p
+        for (i, pkg) in enumerate(pkgs)
+          wait(spawn(`julia -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
+          Juno.progress(p, i/length(pkgs))
+          Juno.msg(p, pkg)
+        end
+      end
+    else
+      for (i, pkg) in enumerate(pkgs)
+        wait(spawn(`julia -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
       end
     end
+  finally
+    rm(lockpath)
+  end
+end
+
+using IterTools: chain
+
+function _createdocsdb(pkg)
+  try
+    @eval using $(Symbol(pkg))
   end
   docs = alldocs()
+
+  docs_old = isfile(dbpath) ?
+    open(dbpath, "r") do io
+      deserialize(io)
+    end : []
+
+  docs = unique(chain(docs_old, docs))
 
   open(dbpath, "w+") do io
     serialize(io, docs)
   end
-
-  rm(lockpath)
 end
 
 """
@@ -35,7 +60,8 @@ This is done by loading all packages and using introspection to retrieve the doc
 the obvious limitation is that only packages that actually load without errors are considered.
 """
 function createdocsdb()
-  spawn(`julia -e "using DocSeeker; DocSeeker._createdocsdb()"`)
+  @async _createdocsdb()
+  nothing
 end
 
 """

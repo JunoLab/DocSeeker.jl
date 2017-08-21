@@ -8,7 +8,7 @@ using StringDistances, AutoHashEquals, Hiccup, Requires
 
 # TODO: figure out how to get something useable out of `DocObj.sig`
 # TODO: figure out how to save `sig` and not kill serialization
-@auto_hash_equals struct DocObj
+struct DocObj
   name::String
   mod::String
   typ::String
@@ -18,6 +18,16 @@ using StringDistances, AutoHashEquals, Hiccup, Requires
   path::String
   line::Int
   exported::Bool
+end
+
+function Base.hash(s::DocObj, h::UInt)
+  hash(s.name, hash(s.mod, hash(s.typ, hash(s.text, hash(s.exported, hash(s.line,
+       hash(s.path, hash(:DocObj, h))))))))
+end
+function Base.:(==)(a::DocObj, b::DocObj)
+  isequal(a.name, b.name) && isequal(a.mod, b.mod) && isequal(a.typ, b.typ) &&
+  isequal(a.text, b.text) && isequal(a.path, b.path) && isequal(a.line, b.line) &&
+  isequal(a.exported, b.exported)
 end
 
 # TODO: better string preprocessing.

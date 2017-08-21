@@ -4,3 +4,4 @@ StringDistances
 URIParser
 AutoHashEquals
 Requires
+IterTools

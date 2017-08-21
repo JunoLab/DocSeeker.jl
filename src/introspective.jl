@@ -59,7 +59,7 @@ end
 """
     alldocs() -> Vector{DocObj}
 
-Find all docstrings in module `mod` and it's submodules.
+Find all docstrings in all currently loaded Modules.
 """
 function alldocs()
   topmod = Main
