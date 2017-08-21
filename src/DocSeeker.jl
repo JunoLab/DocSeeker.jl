@@ -26,14 +26,16 @@ end
 
 Scores `s` against the search query `needle`. Returns a `Float` between 0 and 1.
 """
-function score(needle::String, s::DocObj)
+function score(needle::String, s::DocObj, name_only = false)
+  name_only ? score_name(needle, s) : score_all(needle, s)
+end
+
+function score_all(needle::String, s::DocObj)
   score = 0.0
   length(needle) == 0 && return score
 
-  binding = s.name
-
   needles = split(needle, ' ')
-  binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, binding)
+  binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, s.name)
   docs_score    = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
 
   # bonus for exact binding match
@@ -45,6 +47,15 @@ function score(needle::String, s::DocObj)
   length(s.text) == 0 && (score *= 0.8)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
+
+  return score
+end
+
+function score_name(needle::String, s::DocObj)
+  score = compare(Winkler(Jaro()), needle, s.name)
+
+  s.exported || (score *= 0.99)
+  length(s.text) == 0 && (score *= 0.8)
 
   return score
 end

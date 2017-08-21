@@ -5,17 +5,19 @@ MAX_RETURN_SIZE = 20 # how many results to return at most
 
 
 function searchdocs(needle::String; loaded = true, mod = "Main",
-                    maxreturns = MAX_RETURN_SIZE, exportedonly = false)
-  loaded ? dynamicsearch(needle, mod, exportedonly, maxreturns) :
-           dynamicsearch(needle, mod, exportedonly, maxreturns, loaddocsdb())
+                    maxreturns = MAX_RETURN_SIZE, exportedonly = false,
+                    name_only = false)
+  loaded ? dynamicsearch(needle, mod, exportedonly, maxreturns, name_only) :
+           dynamicsearch(needle, mod, exportedonly, maxreturns, name_only, loaddocsdb())
 end
 
 function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
-                       maxreturns = MAX_RETURN_SIZE, docs = alldocs())
+                       maxreturns = MAX_RETURN_SIZE, name_only = false,
+                       docs = alldocs())
   isempty(docs) && return []
   scores = zeros(size(docs))
   Threads.@threads for i in eachindex(docs)
-    scores[i] = score(needle, docs[i])
+    scores[i] = score(needle, docs[i], name_only)
   end
   perm = sortperm(scores, rev=true)
   out = [(scores[p], docs[p]) for p in perm]
@@ -33,7 +35,6 @@ function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
       x -> true
     end
   end
-
   filter!(f, out)
 
   out[1:min(length(out), maxreturns)]
