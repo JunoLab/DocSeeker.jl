@@ -37,12 +37,12 @@ function score(needle::String, s::DocObj)
   docs_score    = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
 
   # bonus for exact binding match
-  binding_weight = binding_score == 1.0 ? 0.8 : 0.75
+  binding_weight = binding_score == 1.0 ? 0.95 : 0.7
 
   score += binding_weight*binding_score + (1 - binding_weight)*docs_score
 
   # penalty if binding has no docs
-  length(s.text) == 0 && (score *= 0.98)
+  length(s.text) == 0 && (score *= 0.8)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
 
