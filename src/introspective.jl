@@ -143,6 +143,7 @@ function determinetype(mod, var)
   b = getfield(mod, var)
 
   b isa Function && return "Function"
+  b isa UnionAll && return "DataType"
 
   string(typeof(b))
 end
