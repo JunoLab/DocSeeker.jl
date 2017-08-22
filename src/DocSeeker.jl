@@ -4,7 +4,7 @@ module DocSeeker
 
 export searchdocs
 
-using StringDistances, AutoHashEquals, Hiccup, Requires
+using StringDistances, Hiccup, Requires
 
 # TODO: figure out how to get something useable out of `DocObj.sig`
 # TODO: figure out how to save `sig` and not kill serialization
@@ -65,7 +65,7 @@ function score_name(needle::String, s::DocObj)
   score = compare(Winkler(Jaro()), needle, s.name)
 
   s.exported || (score *= 0.99)
-  length(s.text) == 0 && (score *= 0.8)
+  length(s.text) == 0 && (score *= 0.99)
 
   return score
 end
