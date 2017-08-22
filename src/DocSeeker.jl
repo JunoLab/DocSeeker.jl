@@ -14,7 +14,7 @@ struct DocObj
   typ::String
   # sig::Any
   text::String
-  html::Hiccup.Node
+  html::Markdown.MD
   path::String
   line::Int
   exported::Bool

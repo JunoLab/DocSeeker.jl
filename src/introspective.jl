@@ -92,7 +92,7 @@ function alldocs()
       for sig in multidoc.order
         d = multidoc.docs[sig]
         text = Markdown.parse(join(d.text, ' '))
-        html = renderMD(text)
+        html = text
         text = Docs.stripmd(text)
         path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
         dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
@@ -123,7 +123,7 @@ function alldocs()
         #   end
         # else
           dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                        "", Hiccup.div(), "<unknown>", 0, expb)
+                        "", Markdown.parse(""), "<unknown>", 0, expb)
           push!(results, dobj)
         # end
       end
