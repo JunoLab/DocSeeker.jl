@@ -96,7 +96,7 @@ end
 
     function Juno.render(i::Juno.Inline, d::DocObj)
       Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
-                                    span(" @ $(d.path):$(d.line)")), [Markdown.parse(d.text)]))
+                                    span(" @ $(d.path):$(d.line)")), [Juno.render(i, renderMD(d.html))]))
     end
 
     Atom.view(n::Hiccup.Node{:latex}) =

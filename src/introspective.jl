@@ -1,4 +1,4 @@
-CACHE = Dict{String, Tuple{Float64, Vector{DocObj}}}()
+CACHE = (0, [])
 CACHETIMEOUT = 30 # s
 
 MAX_RETURN_SIZE = 20 # how many results to return at most
@@ -62,10 +62,11 @@ end
 Find all docstrings in all currently loaded Modules.
 """
 function alldocs()
+  global CACHE
+
   topmod = Main
-  stopmod = string(topmod)
-  if haskey(CACHE, stopmod) && (time() - CACHE[stopmod][1]) < CACHETIMEOUT
-    return CACHE[stopmod][2]
+  if (time() - CACHE[1]) < CACHETIMEOUT
+    return CACHE[2]
   end
 
   results = DocObj[]
@@ -91,14 +92,12 @@ function alldocs()
       multidoc = meta[b]
       for sig in multidoc.order
         d = multidoc.docs[sig]
-        text = Markdown.parse(join(d.text, ' '))
-        html = text
-        text = Docs.stripmd(text)
+        md = Markdown.parse(join(d.text, ' '))
+        text = Docs.stripmd(md)
         path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
         dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                       # sig,
-                      text, html, path, d.data[:linenumber], expb)
-
+                      text, md, path, d.data[:linenumber], expb)
         push!(results, dobj)
       end
     end
@@ -112,7 +111,7 @@ function alldocs()
              (haskey(exported, parentmod) && (name in exported[parentmod]))
 
       if isdefined(mod, name) && !Base.isdeprecated(mod, name) && name != :Vararg
-        # TODO: For now we don't need this -> free 50% speedup.
+        # HACK: For now we don't need this -> free 50% speedup.
         # bind = getfield(mod, name)
         # meths = methods(bind)
         # if !isempty(meths)
@@ -122,19 +121,35 @@ function alldocs()
         #     push!(results, dobj)
         #   end
         # else
-          dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
-                        "", Markdown.parse(""), "<unknown>", 0, expb)
-          push!(results, dobj)
+        #   dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+        #                 "", Markdown.parse(""), "<unknown>", 0, expb)
+        #   push!(results, dobj)
         # end
+        dobj = DocObj(string(name), string(mod), string(determinetype(mod, name)),
+                      "", Markdown.parse(""), "<unknown>", 0, expb)
+        push!(results, dobj)
       end
     end
   end
+  append!(results, keywords())
   results = unique(results)
 
   # update cache
-  CACHE[stopmod] = (time(), results)
+  CACHE = (time(), results)
 
   return results
+end
+
+function keywords()
+  out = DocObj[]
+  for k in keys(Docs.keywords)
+    d = Docs.keywords[k]
+    md = Markdown.parse(join(d.text, ' '))
+    text = Docs.stripmd(md)
+    dobj = DocObj(string(k), "Base", "Keyword", text, md, "", 0, true)
+    push!(out, dobj)
+  end
+  return out
 end
 
 function determinetype(mod, var)
