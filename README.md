@@ -4,9 +4,6 @@
 
 DocSeeker.jl provides utilities for handling documentation in local (so far) packages.
 
-For now, `Pkg.checkout("StringDistances")` is heavily recommended, because there's an annoying
-`@show` in the latest release.
-
 ### Usage
 
 The main entry point is `searchdocs`:
