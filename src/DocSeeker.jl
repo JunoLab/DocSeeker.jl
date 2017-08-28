@@ -58,7 +58,7 @@ function score(needle::String, s::DocObj, name_only = false)
   # penalty if cases don't match
   binding_score < c_binding_score && (score *= 0.98)
   # penalty if binding has no docs
-  length(s.text) == 0 && (score *= 0.9)
+  length(s.text) == 0 && (score *= 0.85)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
 
