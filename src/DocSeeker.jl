@@ -46,15 +46,21 @@ function score_all(needle::String, s::DocObj)
 
   needles = split(needle, ' ')
   binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, s.name)
+  c_binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), lowercase(needle), lowercase(s.name))
   docs_score    = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
 
-  # bonus for exact binding match
-  binding_weight = binding_score == 1.0 ? 0.95 : 0.7
+	# bonus for matching case
+	binding_score = c_binding_score > binding_score ? mean([c_binding_score, binding_score]) : binding_score
 
-  score += binding_weight*binding_score + (1 - binding_weight)*docs_score
+  # bonus for exact case-insensitive binding match
+  binding_weight = c_binding_score == 1.0 ? 0.95 : 0.7
 
+  score += binding_weight*c_binding_score + (1 - binding_weight)*docs_score
+
+  # penalty if cases don't match
+  binding_score < c_binding_score && (score *= 0.98)
   # penalty if binding has no docs
-  length(s.text) == 0 && (score *= 0.8)
+  length(s.text) == 0 && (score *= 0.9)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
 

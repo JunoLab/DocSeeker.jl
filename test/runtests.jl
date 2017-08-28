@@ -30,6 +30,7 @@ let downloadsearch = dynamicsearch("download")
   @test dfound == 1
 end
 
+@test dynamicsearch("regex")[1][2].name == "Regex"
 
 DocSeeker._createdocsdb()
 @test isfile(DocSeeker.dbpath)
