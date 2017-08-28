@@ -37,25 +37,23 @@ end
 Scores `s` against the search query `needle`. Returns a `Float` between 0 and 1.
 """
 function score(needle::String, s::DocObj, name_only = false)
-  name_only ? score_name(needle, s) : score_all(needle, s)
-end
-
-function score_all(needle::String, s::DocObj)
   score = 0.0
   length(needle) == 0 && return score
 
   needles = split(needle, ' ')
   binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, s.name)
   c_binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), lowercase(needle), lowercase(s.name))
-  docs_score    = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
+  
+  if name_only
+    score = c_binding_score
+  else
+    docs_score = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
 
-	# bonus for matching case
-	binding_score = c_binding_score > binding_score ? mean([c_binding_score, binding_score]) : binding_score
+    # bonus for exact case-insensitive binding match
+    binding_weight = c_binding_score == 1.0 ? 0.95 : 0.7
 
-  # bonus for exact case-insensitive binding match
-  binding_weight = c_binding_score == 1.0 ? 0.95 : 0.7
-
-  score += binding_weight*c_binding_score + (1 - binding_weight)*docs_score
+    score += binding_weight*c_binding_score + (1 - binding_weight)*docs_score
+  end
 
   # penalty if cases don't match
   binding_score < c_binding_score && (score *= 0.98)
@@ -63,15 +61,6 @@ function score_all(needle::String, s::DocObj)
   length(s.text) == 0 && (score *= 0.9)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
-
-  return score
-end
-
-function score_name(needle::String, s::DocObj)
-  score = compare(Winkler(Jaro()), needle, s.name)
-
-  s.exported || (score *= 0.99)
-  length(s.text) == 0 && (score *= 0.99)
 
   return score
 end
