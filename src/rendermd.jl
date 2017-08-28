@@ -1,5 +1,7 @@
 renderMD(md::Markdown.MD) = renderMD(md.content)
 
+renderMD(md::AbstractString) = renderMD(Markdown.parse(md))
+
 renderMD(md::Vector) = Hiccup.div([renderMD(x) for x in md], class = "markdown")
 
 function renderMD{l}(header::Markdown.Header{l})

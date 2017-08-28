@@ -43,7 +43,7 @@ function score(needle::String, s::DocObj, name_only = false)
   needles = split(needle, ' ')
   binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, s.name)
   c_binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), lowercase(needle), lowercase(s.name))
-  
+
   if name_only
     score = c_binding_score
   else
@@ -105,12 +105,7 @@ include("fuzzaldrin.jl")
 include("introspective.jl")
 include("finddocs.jl")
 include("static.jl")
-# include("db.jl")
-include("precompile.jl")
 include("documenter.jl")
 include("rendermd.jl")
 include("moduleinfo.jl")
-
-_precompile_()
-
 end # module
