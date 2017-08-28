@@ -60,6 +60,8 @@ This is done by loading all packages and using introspection to retrieve the doc
 the obvious limitation is that only packages that actually load without errors are considered.
 """
 function createdocsdb()
+  isfile(dbpath) && rm(dbpath)
+  isfile(lockpath) && rm(lockpath)
   @async _createdocsdb()
   nothing
 end
@@ -73,6 +75,8 @@ vector if the database is locked by `createdocsdb()`.
 function loaddocsdb()
   global DOCDBCACHE
   isempty(DOCDBCACHE) && (DOCDBCACHE = _loaddocsdb())
+  length(DOCDBCACHE) == 0 &&
+    throw(ErrorException("Please regenerate the doc cache by calling `DocSeeker.createdocsdb()`."))
   DOCDBCACHE
 end
 
