@@ -101,7 +101,6 @@ end
   end
 end
 
-include("fuzzaldrin.jl")
 include("introspective.jl")
 include("finddocs.jl")
 include("static.jl")
