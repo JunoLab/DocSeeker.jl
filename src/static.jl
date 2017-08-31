@@ -17,14 +17,14 @@ function _createdocsdb()
     if isdefined(Main, :Juno) && Juno.isactive()
       Juno.progress(name="Documentation Cache") do p
         for (i, pkg) in enumerate(pkgs)
-          wait(spawn(`julia -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
+          wait(spawn(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
           Juno.progress(p, i/length(pkgs))
           Juno.msg(p, pkg)
         end
       end
     else
       for (i, pkg) in enumerate(pkgs)
-        wait(spawn(`julia -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
+        wait(spawn(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
       end
     end
   finally
