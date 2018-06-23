@@ -1,3 +1,6 @@
+using IterTools: chain
+using Serialization: deserialize
+
 const dbpath = joinpath(@__DIR__, "..", "db", "usingdb")
 const lockpath = joinpath(@__DIR__, "..", "db", "usingdb.lock")
 
@@ -32,7 +35,6 @@ function _createdocsdb()
   end
 end
 
-using IterTools: chain
 
 function _createdocsdb(pkg)
   try
