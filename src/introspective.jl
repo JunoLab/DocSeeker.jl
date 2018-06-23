@@ -41,7 +41,7 @@ function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
 end
 
 function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symbol}}(), seenmods = Set{Module}())
-  for name in names(mod, !exportedonly, !exportedonly)
+  for name in names(mod, all=!exportedonly, imported=!exportedonly)
     startswith(string(name), '#') && continue
     if isdefined(mod, name) && !Base.isdeprecated(mod, name)
       obj = getfield(mod, name)
@@ -77,7 +77,7 @@ function alldocs()
 
   # loop over all loaded modules
   for mod in keys(modbinds)
-    parentmod = module_parent(mod)
+    parentmod = parentmodule(mod)
     meta = Docs.meta(mod)
 
     # loop over all names handled by the docsystem
@@ -93,7 +93,7 @@ function alldocs()
       for sig in multidoc.order
         d = multidoc.docs[sig]
         md = Markdown.parse(join(d.text, ' '))
-        text = Docs.stripmd(md)
+        text = stripmd(md)
         path = d.data[:path] == nothing ? "<unknown>" : d.data[:path]
         dobj = DocObj(string(b.var), string(b.mod), string(determinetype(b.mod, b.var)),
                       # sig,
@@ -145,7 +145,7 @@ function keywords()
   for k in keys(Docs.keywords)
     d = Docs.keywords[k]
     md = Markdown.parse(join(d.text, ' '))
-    text = Docs.stripmd(md)
+    text = stripmd(md)
     dobj = DocObj(string(k), "Base", "Keyword", text, md, "", 0, true)
     push!(out, dobj)
   end
