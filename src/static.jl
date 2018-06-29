@@ -39,6 +39,7 @@ end
 function _createdocsdb(pkg)
   try
     @eval using $(Symbol(pkg))
+  catch e
   end
   docs = alldocs()
 
