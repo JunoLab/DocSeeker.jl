@@ -16,8 +16,7 @@ function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
                        docs = alldocs())
   isempty(docs) && return []
   scores = zeros(size(docs))
-  # Threads.@threads 
-  for i in eachindex(docs)
+  Threads.@threads for i in eachindex(docs)
     scores[i] = score(needle, docs[i], name_only)
   end
   perm = sortperm(scores, rev=true)

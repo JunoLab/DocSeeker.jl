@@ -1,6 +1,6 @@
-julia 0.6
+julia 0.7-beta
 Hiccup
-StringDistances
+StringDistances 0.3
 URIParser
-Requires
+Requires 0.5.2
 IterTools
