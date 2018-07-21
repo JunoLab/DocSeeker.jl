@@ -5,6 +5,8 @@ module DocSeeker
 export searchdocs
 
 using StringDistances, Hiccup, Requires
+using REPL: stripmd
+import Markdown
 
 # TODO: figure out how to get something useable out of `DocObj.sig`
 # TODO: figure out how to save `sig` and not kill serialization
@@ -76,19 +78,21 @@ function Base.show(io::IO, ::MIME"text/plain", d::DocObj)
   println(io, d.text)
 end
 
-# improved rendering if used in Atom:
-@require Juno begin
-  @require Atom begin
-    function Juno.render(i::Juno.Inline, d::DocObj)
-      Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
-                                    span(" @ $(d.path):$(d.line)")), [Juno.render(i, Juno.renderMD(d.html))]))
-    end
-  end
-end
-
 include("introspective.jl")
 include("finddocs.jl")
 include("static.jl")
 include("documenter.jl")
+
+function __init()__
+  # improved rendering if used in Atom:
+  @require Juno="e5e0dc1b-0480-54bc-9374-aad01c23163d" begin
+    @require Atom="c52e3926-4ff0-5f6e-af25-54175e0327b1" begin
+      function Juno.render(i::Juno.Inline, d::DocObj)
+        Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
+                                      span(" @ $(d.path):$(d.line)")), [Juno.render(i, Juno.renderMD(d.html))]))
+      end
+    end
+  end
+end
 
 end # module

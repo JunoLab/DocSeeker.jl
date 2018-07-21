@@ -8,6 +8,15 @@ function basepath(files...)
   normpath(joinpath(isdir(srcdir) ? srcdir : releasedir, files...))
 end
 
+function pkgrootpath(pkg)
+  pkgpath = Base.find_package(pkg)
+
+  # package not installed
+  isfile(pkgpath) || return nothing
+
+  return normpath(joinpath(dirname(pkgpath), ".."))
+end
+
 """
     docsdir(pkg) -> String
 
@@ -19,9 +28,9 @@ function docsdir(pkg)
   # sepcial case base
   lowercase(pkg) == "base" && return joinpath(basepath("doc"), "src")
 
-  pkgpath = Pkg.dir(pkg)
-  # package not installed
-  isdir(pkgpath) || return ""
+  pkgpath = pkgrootpath(pkg)
+
+  pkgpath === nothing && return ""
 
   # Documenter.jl default:
   docpath = joinpath(pkgpath, "docs", "src")
@@ -39,9 +48,10 @@ end
 function readmepath(pkg)
   (lowercase(pkg) == base) && return ""
 
-  pkgpath = Pkg.dir(pkg)
+  pkgpath = pkgrootpath(pkg)
   # package not installed
-  isdir(pkgpath) || return ""
+  pkgpath === nothing && return ""
+
   joinpath(pkgpath, "README.md")
 end
 
@@ -78,9 +88,10 @@ Search `pkg`s readme for links to documentation.
 """
 function finddocsURL(pkg)
   lowercase(pkg) == "base" && return [Markdown.Link("", "https://docs.julialang.org")]
-  pkgpath = Pkg.dir(pkg)
+  pkgpath = pkgrootpath(pkg)
+
   doclinks = Markdown.Link[]
-  isdir(pkgpath) || return doclinks
+  pkgpath === nothing && return doclinks
 
   readmepath = joinpath(pkgpath, "README.md")
   isfile(readmepath) || return doclinks
