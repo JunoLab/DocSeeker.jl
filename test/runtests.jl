@@ -1,5 +1,5 @@
 using DocSeeker
-using Base.Test
+using Test
 
 import DocSeeker: dynamicsearch
 
@@ -15,7 +15,7 @@ end
 
 @test firstN(dynamicsearch("sine"), ["sin", "sind", "asin"], 20)
 
-@test firstN(dynamicsearch("regular expression"), ["match", "eachmatch", "search"], 20)
+@test firstN(dynamicsearch("regular expression"), ["match", "eachmatch", "replace"], 20)
 
 @test dynamicsearch("Real")[1][2].name == "Real"
 @test length(dynamicsearch("Real")[1][2].text) > 0
@@ -31,9 +31,5 @@ let downloadsearch = dynamicsearch("download")
 end
 
 @test dynamicsearch("regex")[1][2].name == "Regex"
-
-DocSeeker._createdocsdb()
-@test isfile(DocSeeker.dbpath)
-@test !isempty(DocSeeker.loaddocsdb())
 
 include("finddocs.jl")
