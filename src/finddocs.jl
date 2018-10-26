@@ -46,7 +46,7 @@ function docsdir(pkg)
 end
 
 function readmepath(pkg)
-  (lowercase(pkg) == base) && return ""
+  (lowercase(pkg) == "base") && return ""
 
   pkgpath = pkgrootpath(pkg)
   # package not installed
