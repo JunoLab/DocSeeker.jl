@@ -1,5 +1,6 @@
 using IterTools: chain
-using Serialization: deserialize
+using Serialization: serialize, deserialize
+using Pkg
 
 const dbpath = joinpath(@__DIR__, "..", "db", "usingdb")
 const lockpath = joinpath(@__DIR__, "..", "db", "usingdb.lock")
@@ -17,17 +18,17 @@ function _createdocsdb()
     isfile(dbpath) && rm(dbpath)
 
     pkgs = keys(Pkg.installed())
-    if isdefined(Main, :Juno) && Juno.isactive()
-      Juno.progress(name="Documentation Cache") do p
+    if isdefined(Main, :Juno) && Main.Juno.isactive()
+      Main.Juno.progress(name="Documentation Cache") do p
         for (i, pkg) in enumerate(pkgs)
-          wait(spawn(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
-          Juno.progress(p, i/length(pkgs))
-          Juno.msg(p, pkg)
+          wait(run(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`,wait=false))
+          @info pkg progress=i/length(pkgs) _id=p #Juno.progress(p, i/length(pkgs))
+          #Main.Juno.msg(p, pkg)
         end
       end
     else
       for (i, pkg) in enumerate(pkgs)
-        wait(spawn(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
+        wait(run(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`,wait=false))
       end
     end
   finally
