@@ -15,11 +15,8 @@ between 0 and 1, and represent the quality of a given match. Matches are `DocObj
 accumulate lots of metadata about a binding (e.g. name, type, location etc.).
 
 `searchdocs` takes three keyword arguments:
-- `mod::String = "Main"` will restrict the search to the given module -- by default every loaded
-package will be searched.
-- `loaded::Bool = true` will search only packages in the current session, while `loaded = false`
-will search in *all* locally installed packages (actually only those in `Pkg.dir()`). Requires a
-call to `DocSeeker.createdocsdb()` beforehand.
+- `mod::String = "Main"` will restrict the search to the given module -- by default every loaded package will be searched.
+- `loaded::Bool = true` will search only packages in the current session, while `loaded = false` will search in *all* locally installed packages (actually only those in `Pkg.installed()`). Requires a call to `DocSeeker.createdocsdb()` beforehand.
 - `exportedonly::Bool = false` will search all names a module has, while `exportedonly=true`
 only takes exported names into consideration.
 

@@ -1,5 +1,11 @@
 import DocSeeker: baseURL, finddocsURL, readmepath
 
-@test baseURL(finddocsURL("base")) == "https://docs.julialang.org"
+@testset "finddocs" begin
+    @testset "finddocsURL" begin
+        @test baseURL(finddocsURL("base")) == "https://docs.julialang.org"
+    end
 
-@test readmepath("DocSeeker") == abspath(joinpath(@__DIR__, "..", "README.md"))
+    @testset "readmepath" begin
+        @test readmepath("DocSeeker") == abspath(joinpath(@__DIR__, "..", "README.md"))
+    end
+end
