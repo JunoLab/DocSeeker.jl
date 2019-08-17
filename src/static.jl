@@ -47,6 +47,7 @@ end
 
 function _createdocsdb(pkg)
   try
+    # @TODO: run this function in `Main` module and suppress package dependencies warning
     @eval using $(Symbol(pkg))
   catch err
     @error err
