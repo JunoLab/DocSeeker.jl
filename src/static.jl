@@ -1,5 +1,7 @@
-using IterTools: chain
-using Serialization: deserialize
+using Pkg: installed
+using Distributed: @spawn
+using Base.Iterators: flatten
+using Serialization: serialize, deserialize
 
 const dbpath = joinpath(@__DIR__, "..", "db", "usingdb")
 const lockpath = joinpath(@__DIR__, "..", "db", "usingdb.lock")
@@ -16,39 +18,46 @@ function _createdocsdb()
   try
     isfile(dbpath) && rm(dbpath)
 
-    pkgs = keys(Pkg.installed())
-    if isdefined(Main, :Juno) && Juno.isactive()
-      Juno.progress(name="Documentation Cache") do p
-        for (i, pkg) in enumerate(pkgs)
-          wait(spawn(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
-          Juno.progress(p, i/length(pkgs))
-          Juno.msg(p, pkg)
+    pkgs = keys(installed())
+
+    if isdefined(Main, :Juno)
+      @eval import Juno
+      Juno.isactive() && begin
+        Juno.progress() do id
+          for (i, pkg) in enumerate(pkgs)
+            @info "caching documentations of $(pkg) ..." progress = i / length(pkgs) _id = id
+            process = @spawn _createdocsdb(pkg)
+            wait(process)
+          end
         end
       end
     else
       for (i, pkg) in enumerate(pkgs)
-        wait(spawn(`$(Base.julia_cmd()) -e "using DocSeeker; DocSeeker._createdocsdb(\"$(pkg)\")"`))
+        @info "caching documentations of $(pkg) ..."
+        process = @spawn _createdocsdb(pkg)
+        wait(process)
       end
     end
+  catch err
+    @error err
   finally
     rm(lockpath)
   end
 end
 
-
 function _createdocsdb(pkg)
   try
     @eval using $(Symbol(pkg))
-  catch e
+  catch err
+    @error err
+    return
   end
-  docs = alldocs()
 
   docs_old = isfile(dbpath) ?
     open(dbpath, "r") do io
       deserialize(io)
     end : []
-
-  docs = unique(chain(docs_old, docs))
+  docs = unique(flatten((docs_old, alldocs())))
 
   open(dbpath, "w+") do io
     serialize(io, docs)
@@ -58,7 +67,7 @@ end
 """
     createdocsdb()
 
-Asynchronously create a "database" of all local docstrings in `Pkg.dir()`.
+Asynchronously create a "database" of all local docstrings in [`Pkg.installed()`](@ref).
 This is done by loading all packages and using introspection to retrieve the docstrings --
 the obvious limitation is that only packages that actually load without errors are considered.
 """
@@ -72,8 +81,8 @@ end
 """
     loaddocsdb() -> Vector{DocObj}
 
-Retrieve the docstrings from the "database" created by `createdocsdb()`. Will return an empty
-vector if the database is locked by `createdocsdb()`.
+Retrieve the docstrings from the "database" created by [`createdocsdb()`](@ref).
+Will return an empty vector if the database is locked by [`createdocsdb()`](@ref).
 """
 function loaddocsdb()
   global DOCDBCACHE
