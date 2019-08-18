@@ -3,66 +3,39 @@ using Distributed: @spawn
 using Base.Iterators: flatten
 using Serialization: serialize, deserialize
 
-const dbpath = joinpath(@__DIR__, "..", "db", "usingdb")
-const lockpath = joinpath(@__DIR__, "..", "db", "usingdb.lock")
+include("utils.jl")
 
+const PROGRESS_ID = "docseeker_progress"
 DOCDBCACHE = DocObj[]
 
 function _createdocsdb()
-  isfile(lockpath) && return
-
-  open(lockpath, "w+") do io
-    println(io, "locked")
-  end
-
+  @info "Docs" progress=0 _id=PROGRESS_ID
+  PKGSDONE[] = 0
   try
-    isfile(dbpath) && rm(dbpath)
-
-    pkgs = keys(installed())
-
-    if isdefined(Main, :Juno)
-      @eval import Juno
-      Juno.isactive() && begin
-        Juno.progress() do id
-          for (i, pkg) in enumerate(pkgs)
-            @info "caching documentations of $(pkg) ..." progress = i / length(pkgs) _id = id
-            process = @spawn _createdocsdb(pkg)
-            wait(process)
-          end
-        end
-      end
-    else
-      for (i, pkg) in enumerate(pkgs)
-        @info "caching documentations of $(pkg) ..."
-        process = @spawn _createdocsdb(pkg)
-        wait(process)
-      end
-    end
+    pkgs = collect(keys(installed()))
+    pushfirst!(pkgs, "Base")
+    ondone = (i, el) -> progress_callback(i, el, pkgs)
+    run_queued(docdb_wrapper, pkgs, ondone = ondone)
   catch err
     @error err
   finally
-    rm(lockpath)
+    @info "" progress=1 _id=PROGRESS_ID
   end
 end
 
-function _createdocsdb(pkg)
-  try
-    # @TODO: run this function in `Main` module and suppress package dependencies warning
-    @eval using $(Symbol(pkg))
-  catch err
-    @error err
-    return
-  end
+const PKGSDONE = Ref(0)
+function progress_callback(i, el, pkgs)
+  total = length(pkgs)
+  PKGSDONE[] += 1
+  @info "Docs: $el ($(PKGSDONE[])/$total)" progress=PKGSDONE[]/total _id=PROGRESS_ID
+end
 
-  docs_old = isfile(dbpath) ?
-    open(dbpath, "r") do io
-      deserialize(io)
-    end : []
-  docs = unique(flatten((docs_old, alldocs())))
-
-  open(dbpath, "w+") do io
-    serialize(io, docs)
-  end
+function docdb_wrapper(pkg)
+  workerfile = joinpath(@__DIR__, "create_db.jl")
+  env = dirname(Base.active_project())
+  cmd = `$(first(Base.julia_cmd())) --compiled-modules=no -O0 $workerfile $pkg $env`
+  logfile = joinpath(@__DIR__, "..", "db", string(pkg, "-", hash(env), ".log"))
+  return cmd, Dict(:log=>logfile)
 end
 
 """
@@ -73,8 +46,12 @@ This is done by loading all packages and using introspection to retrieve the doc
 the obvious limitation is that only packages that actually load without errors are considered.
 """
 function createdocsdb()
-  isfile(dbpath) && rm(dbpath)
-  isfile(lockpath) && rm(lockpath)
+  dbdir = joinpath(@__DIR__, "..", "db")
+  for file in readdir(dbdir)
+    if endswith(file, ".db") || endswith(file, ".log")
+      rm(joinpath(dbdir, file))
+    end
+  end
   @async _createdocsdb()
   nothing
 end
@@ -94,8 +71,16 @@ function loaddocsdb()
 end
 
 function _loaddocsdb()
-  (isfile(lockpath) || !isfile(dbpath)) && return DocObj[]
-  open(dbpath, "r") do io
-    deserialize(io)
+  dbdir = joinpath(@__DIR__, "..", "db")
+  docs = DocObj[]
+  for file in readdir(dbdir)
+    endswith(file, ".db") || continue
+    try
+      append!(docs, deserialize(joinpath(dbdir, file)))
+    catch err
+      # @error err, file
+    end
   end
+  unique!(docs)
+  return docs
 end
