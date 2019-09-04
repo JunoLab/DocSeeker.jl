@@ -1,6 +1,6 @@
 name = "DocSeeker"
 uuid = "33d173f1-3be9-53c5-a697-8225b67db89c"
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
@@ -15,9 +15,9 @@ StringDistances = "88034a9c-02f8-509d-84a9-84ec65e18404"
 URIParser = "30578b45-9adc-5946-b283-645ec420af67"
 
 [compat]
-Requires = "≥ 0.5.2"
-StringDistances = "≥ 0.3.0"
-julia = "≥ 0.7.0"
+Requires = "0.5.2"
+StringDistances = "0.4.0"
+julia = "0.7, 1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

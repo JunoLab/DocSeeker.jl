@@ -43,13 +43,13 @@ function score(needle::String, s::DocObj, name_only = false)
   length(needle) == 0 && return score
 
   needles = split(needle, ' ')
-  binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, s.name)
-  c_binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), lowercase(needle), lowercase(s.name))
+  binding_score = length(needles) > 1 ? 0.0 : compare(needle, s.name, Winkler(Jaro()))
+  c_binding_score = length(needles) > 1 ? 0.0 : compare(lowercase(needle), lowercase(s.name), Winkler(Jaro()))
 
   if name_only
     score = c_binding_score
   else
-    docs_score = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
+    docs_score = compare(lowercase(needle), lowercase(s.text), TokenSet(Jaro()))
 
     # bonus for exact case-insensitive binding match
     binding_weight = c_binding_score == 1.0 ? 0.95 : 0.7
@@ -85,12 +85,10 @@ include("documenter.jl")
 
 function __init()__
   # improved rendering if used in Atom:
-  @require Juno="e5e0dc1b-0480-54bc-9374-aad01c23163d" begin
-    @require Atom="c52e3926-4ff0-5f6e-af25-54175e0327b1" begin
-      function Juno.render(i::Juno.Inline, d::DocObj)
-        Juno.render(i, Juno.Tree(span(span(".syntax--support.syntax--function", d.name),
-                                      span(" @ $(d.path):$(d.line)")), [Juno.render(i, Juno.renderMD(d.html))]))
-      end
+  @require Atom="c52e3926-4ff0-5f6e-af25-54175e0327b1" begin
+    function Atom.render(i::Atom.Inline, d::DocObj)
+      Atom.render(i, Atom.Tree(span(span(".syntax--support.syntax--function", d.name),
+                                    span(" @ $(d.path):$(d.line)")), [Atom.render(i, Atom.renderMD(d.html))]))
     end
   end
 end

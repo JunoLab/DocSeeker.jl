@@ -41,6 +41,13 @@ function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
 end
 
 function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symbol}}(), seenmods = Set{Module}())
+  # This does fairly stupid things, but whatever. Works for now.
+  for mod in Base.loaded_modules_array()
+    mod in seenmods && continue
+    push!(seenmods, mod)
+    modulebindings(mod, exportedonly, binds, seenmods)
+  end
+
   for name in names(mod, all=!exportedonly, imported=!exportedonly)
     startswith(string(name), '#') && continue
     if isdefined(mod, name) && !Base.isdeprecated(mod, name)
@@ -57,14 +64,13 @@ function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symb
 end
 
 """
-    alldocs() -> Vector{DocObj}
+    alldocs(topmod = Main) -> Vector{DocObj}
 
 Find all docstrings in all currently loaded Modules.
 """
-function alldocs()
+function alldocs(topmod = Main)
   global CACHE
 
-  topmod = Main
   if (time() - CACHE[1]) < CACHETIMEOUT
     return CACHE[2]
   end
