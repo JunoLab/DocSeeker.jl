@@ -1,5 +1,4 @@
 using Pkg: installed
-using Distributed: @spawn
 using Base.Iterators: flatten
 using Serialization: serialize, deserialize
 

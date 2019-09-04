@@ -43,13 +43,13 @@ function score(needle::String, s::DocObj, name_only = false)
   length(needle) == 0 && return score
 
   needles = split(needle, ' ')
-  binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), needle, s.name)
-  c_binding_score = length(needles) > 1 ? 0.0 : compare(Winkler(Jaro()), lowercase(needle), lowercase(s.name))
+  binding_score = length(needles) > 1 ? 0.0 : compare(needle, s.name, Winkler(Jaro()))
+  c_binding_score = length(needles) > 1 ? 0.0 : compare(lowercase(needle), lowercase(s.name), Winkler(Jaro()))
 
   if name_only
     score = c_binding_score
   else
-    docs_score = compare(TokenSet(Jaro()), lowercase(needle), lowercase(s.text))
+    docs_score = compare(lowercase(needle), lowercase(s.text), TokenSet(Jaro()))
 
     # bonus for exact case-insensitive binding match
     binding_weight = c_binding_score == 1.0 ? 0.95 : 0.7
