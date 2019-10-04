@@ -1,4 +1,4 @@
-using Pkg: installed
+using Pkg
 using Base.Iterators: flatten
 using Serialization: serialize, deserialize
 
@@ -11,7 +11,11 @@ function _createdocsdb()
   @info "Docs" progress=0 _id=PROGRESS_ID
   PKGSDONE[] = 0
   try
-    pkgs = collect(keys(installed()))
+    pkgs = if isdefined(Pkg, :dependencies)
+      getfield.(values(Pkg.dependencies()), :name)
+    else
+      collect(keys(Pkg.installed()))
+    end
     pushfirst!(pkgs, "Base")
     ondone = (i, el) -> progress_callback(i, el, pkgs)
     run_queued(docdb_wrapper, pkgs, ondone = ondone)
