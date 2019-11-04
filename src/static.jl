@@ -7,6 +7,21 @@ include("utils.jl")
 const PROGRESS_ID = "docseeker_progress"
 DOCDBCACHE = DocObj[]
 
+# Julia 1.4 master compat
+if !isdefined(Pkg, :installed)
+  function installed(mode = Pkg.PKGMODE_MANIFEST)
+      diffs = Pkg.Display.status(Context(), Pkg.PackageSpec[], mode=mode, use_as_api=true)
+      version_status = Dict{String, Union{VersionNumber,Nothing}}()
+      diffs == nothing && return version_status
+      for entry in diffs
+          version_status[entry.name] = entry.new.ver
+      end
+      return version_status
+  end
+else
+  using Pkg: installed
+end
+
 function _createdocsdb()
   @info "Docs" progress=0 _id=PROGRESS_ID
   PKGSDONE[] = 0
@@ -14,7 +29,7 @@ function _createdocsdb()
     pkgs = if isdefined(Pkg, :dependencies)
       getfield.(values(Pkg.dependencies()), :name)
     else
-      collect(keys(Pkg.installed()))
+      collect(keys(installed()))
     end
     pushfirst!(pkgs, "Base")
     ondone = (i, el) -> progress_callback(i, el, pkgs)
