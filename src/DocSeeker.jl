@@ -38,9 +38,9 @@ end
 
 Scores `s` against the search query `needle`. Returns a `Float` between 0 and 1.
 """
-function score(needle::String, s::DocObj, name_only = false)
+function score(needle::String, s::DocObj, mod = Main, name_only = false)
+  isempty(needle) && return string(mod) == s.mod ? 1.0 : 0.0
   score = 0.0
-  length(needle) == 0 && return score
 
   needles = split(needle, ' ')
   binding_score = length(needles) > 1 ? 0.0 : compare(needle, s.name, Winkler(Jaro()))
@@ -60,9 +60,11 @@ function score(needle::String, s::DocObj, name_only = false)
   # penalty if cases don't match
   binding_score < c_binding_score && (score *= 0.98)
   # penalty if binding has no docs
-  length(s.text) == 0 && (score *= 0.85)
+  isempty(s.text) && (score *= 0.85)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
+  # penalty if module doesn't match
+  mod ≠ Main && string(mod) ≠ s.mod && (score *= 0.75)
 
   return score
 end
