@@ -1,6 +1,6 @@
 # DocSeeker
 
-[![Build Status](https://travis-ci.org/pfitzseb/DocSeeker.jl.svg?branch=master)](https://travis-ci.org/pfitzseb/DocSeeker.jl)
+[![Build Status](https://travis-ci.org/JunoLab/DocSeeker.jl.svg?branch=master)](https://travis-ci.org/JunoLab/DocSeeker.jl)
 
 DocSeeker.jl provides utilities for handling documentation in local (so far) packages.
 
