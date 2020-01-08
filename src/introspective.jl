@@ -3,20 +3,21 @@ CACHETIMEOUT = 30 # s
 
 MAX_RETURN_SIZE = 20 # how many results to return at most
 
-function searchdocs(needle::String; loaded = true, mod = Main,
-                    maxreturns = MAX_RETURN_SIZE, exportedonly = false,
-                    name_only = false)
+function searchdocs(needle::AbstractString; loaded::Bool = true, mod::Module = Main,
+                    maxreturns::Int = MAX_RETURN_SIZE, exportedonly::Bool = false,
+                    name_only::Bool = false)
   loaded ? dynamicsearch(needle, mod, exportedonly, maxreturns, name_only) :
            dynamicsearch(needle, mod, exportedonly, maxreturns, name_only, loaddocsdb())
 end
 
-function dynamicsearch(needle::String, mod = Main,
-                       exportedonly = false, maxreturns = MAX_RETURN_SIZE,
-                       name_only = false, docs = alldocs(mod))
+function dynamicsearch(needle::AbstractString, mod::Module = Main,
+                       exportedonly::Bool = false, maxreturns::Int = MAX_RETURN_SIZE,
+                       name_only::Bool = false, docs::Vector{DocObj} = alldocs(mod))
   isempty(docs) && return DocObj[]
   scores = zeros(size(docs))
+  modstr = string(mod)
   Threads.@threads for i in eachindex(docs)
-    scores[i] = score(needle, docs[i], mod, name_only)
+    scores[i] = score(needle, docs[i], modstr, name_only)
   end
   perm = sortperm(scores, rev=true)
   out = [(scores[p], docs[p]) for p in perm]

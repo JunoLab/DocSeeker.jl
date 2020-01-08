@@ -34,12 +34,12 @@ end
 
 # TODO: better string preprocessing.
 """
-    score(needle, s::Docs.DocObj) -> Float
+    score(needle::AbstractString, s::DocObj, mod::String = "Main", name_only::Bool = false) -> Float
 
 Scores `s` against the search query `needle`. Returns a `Float` between 0 and 1.
 """
-function score(needle::String, s::DocObj, mod = Main, name_only = false)
-  isempty(needle) && return string(mod) == s.mod ? 1.0 : 0.0
+function score(needle::AbstractString, s::DocObj, mod::String = "Main", name_only::Bool = false)
+  isempty(needle) && return mod == s.mod ? 1.0 : 0.0
   score = 0.0
 
   needles = split(needle, ' ')
@@ -64,7 +64,7 @@ function score(needle::String, s::DocObj, mod = Main, name_only = false)
   # penalty if binding isn't exported
   s.exported || (score *= 0.99)
   # penalty if module doesn't match
-  mod ≠ Main && string(mod) ≠ s.mod && (score *= 0.75)
+  mod ≠ "Main" && mod ≠ s.mod && (score *= 0.75)
 
   return score
 end
