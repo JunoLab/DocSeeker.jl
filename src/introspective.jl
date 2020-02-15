@@ -1,4 +1,9 @@
-CACHE = (0, [])
+mutable struct GlobalCache
+  time::Float64
+  cache::Vector{DocObj}
+end
+const CACHE = GlobalCache(0.0, DocObj[])
+
 CACHETIMEOUT = 30 # s
 
 MAX_RETURN_SIZE = 20 # how many results to return at most
@@ -10,6 +15,11 @@ function searchdocs(needle::AbstractString; loaded::Bool = true, mod::Module = M
            dynamicsearch(needle, mod, exportedonly, maxreturns, name_only, loaddocsdb())
 end
 
+# TODO:
+# We may want something like `CodeTools.getmodule` here, so that we can accept `mod` as `String`:
+# - then we can correctly score bindings even in unloaded packages
+# - it would make `isdefined` checks below more robust -- currently it won't work when e.g.
+#   we try to find `Atom.JunoDebugger.isdebugging` given `mod == Atom`
 function dynamicsearch(needle::AbstractString, mod::Module = Main,
                        exportedonly::Bool = false, maxreturns::Int = MAX_RETURN_SIZE,
                        name_only::Bool = false, docs::Vector{DocObj} = alldocs(mod))
@@ -26,16 +36,28 @@ function dynamicsearch(needle::AbstractString, mod::Module = Main,
     if mod == Main
       x -> x[2].exported
     else
-      let mod = mod
-        x -> x[2].exported && isdefined(mod, Symbol(x[2].mod))
+      let mod = mod, modstr = modstr
+        x -> begin
+          # filters out unexported bindings
+          x[2].exported &&
+          # filters bindings that can be reached from `mod`
+          (
+            isdefined(mod, Symbol(x[2].mod)) ||
+            modstr == x[2].mod # needed since submodules are not defined in themselves
+          )
+        end
       end
     end
   else
     if mod == Main
       x -> true
     else
-      let mod = mod
-        x -> isdefined(mod, Symbol(x[2].mod))
+      let mod = mod, modstr = modstr
+        x -> begin
+          # filters bindings that can be reached from `mod`
+          isdefined(mod, Symbol(x[2].mod)) ||
+          modstr == x[2].mod # needed since submodules are not defined in themselves
+        end
       end
     end
   end
@@ -72,12 +94,8 @@ end
 
 Find all docstrings in all currently loaded Modules.
 """
-function alldocs(topmod = Main)
-  global CACHE
-
-  if (time() - CACHE[1]) < CACHETIMEOUT
-    return CACHE[2]
-  end
+function alldocs(topmod = Main)::Vector{DocObj}
+  time() - CACHE.time < CACHETIMEOUT && return CACHE.cache
 
   results = DocObj[]
   # all bindings
@@ -145,7 +163,8 @@ function alldocs(topmod = Main)
   results = unique(results)
 
   # update cache
-  CACHE = (time(), results)
+  CACHE.time = time()
+  CACHE.cache = results
 
   return results
 end
