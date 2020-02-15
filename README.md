@@ -16,7 +16,7 @@ accumulate lots of metadata about a binding (e.g. name, type, location etc.).
 
 `searchdocs` takes three keyword arguments:
 - `loaded::Bool = true` will search only packages in the current session, while `loaded = false` will search in *all* locally installed packages (actually only those in `Pkg.installed()`). Requires a call to `DocSeeker.createdocsdb()` beforehand.
-- `mod::String = "Main"` will restrict the search to the given module -- by default every loaded package will be searched.
+- `mod::Module = Main` will filter out bindings that can't be reached from the given module -- by default every loaded package will be searched.
 - `maxreturns::Int = DocSeeker.MAX_RETURN_SIZE = 20` will specify the maximum number of the results
 - `exportedonly::Bool = false` will search all names a module has, while `exportedonly = true` only takes exported names into consideration.
 - `name_only::Bool = false` will respect equalities between `needle` and both a binding's name and its doc text, while `name_only = true` only respects a equality to a binding's name.

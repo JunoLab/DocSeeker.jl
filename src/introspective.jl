@@ -10,6 +10,11 @@ function searchdocs(needle::AbstractString; loaded::Bool = true, mod::Module = M
            dynamicsearch(needle, mod, exportedonly, maxreturns, name_only, loaddocsdb())
 end
 
+# TODO:
+# We may want something like `CodeTools.getmodule` here, so that we can accept `mod` as `String`:
+# - then we can correctly score bindings even in unloaded packages
+# - it would make `isdefined` checks below more robust -- currently it won't work when e.g.
+#   we try to find `Atom.JunoDebugger.isdebugging` given `mod == Atom`
 function dynamicsearch(needle::AbstractString, mod::Module = Main,
                        exportedonly::Bool = false, maxreturns::Int = MAX_RETURN_SIZE,
                        name_only::Bool = false, docs::Vector{DocObj} = alldocs(mod))
