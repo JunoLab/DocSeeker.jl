@@ -3,41 +3,45 @@ CACHETIMEOUT = 30 # s
 
 MAX_RETURN_SIZE = 20 # how many results to return at most
 
-
-function searchdocs(needle::String; loaded = true, mod = "Main",
-                    maxreturns = MAX_RETURN_SIZE, exportedonly = false,
-                    name_only = false)
+function searchdocs(needle::AbstractString; loaded::Bool = true, mod::Module = Main,
+                    maxreturns::Int = MAX_RETURN_SIZE, exportedonly::Bool = false,
+                    name_only::Bool = false)
   loaded ? dynamicsearch(needle, mod, exportedonly, maxreturns, name_only) :
            dynamicsearch(needle, mod, exportedonly, maxreturns, name_only, loaddocsdb())
 end
 
-function dynamicsearch(needle::String, mod = "Main", exportedonly = false,
-                       maxreturns = MAX_RETURN_SIZE, name_only = false,
-                       docs = alldocs())
-  isempty(docs) && return []
+function dynamicsearch(needle::AbstractString, mod::Module = Main,
+                       exportedonly::Bool = false, maxreturns::Int = MAX_RETURN_SIZE,
+                       name_only::Bool = false, docs::Vector{DocObj} = alldocs(mod))
+  isempty(docs) && return DocObj[]
   scores = zeros(size(docs))
+  modstr = string(mod)
   Threads.@threads for i in eachindex(docs)
-    scores[i] = score(needle, docs[i], name_only)
+    scores[i] = score(needle, docs[i], modstr, name_only)
   end
   perm = sortperm(scores, rev=true)
   out = [(scores[p], docs[p]) for p in perm]
 
   f = if exportedonly
-    if mod ≠ "Main"
-      x -> x[2].exported && x[2].mod == mod
-    else
+    if mod == Main
       x -> x[2].exported
+    else
+      let mod = mod
+        x -> x[2].exported && isdefined(mod, Symbol(x[2].mod))
+      end
     end
   else
-    if mod ≠ "Main"
-      x -> x[2].mod == mod
-    else
+    if mod == Main
       x -> true
+    else
+      let mod = mod
+        x -> isdefined(mod, Symbol(x[2].mod))
+      end
     end
   end
   filter!(f, out)
 
-  out[1:min(length(out), maxreturns)]
+  return out[1:min(length(out), maxreturns)]
 end
 
 function modulebindings(mod, exportedonly = false, binds = Dict{Module, Set{Symbol}}(), seenmods = Set{Module}())
