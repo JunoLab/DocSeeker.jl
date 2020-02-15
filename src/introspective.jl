@@ -26,16 +26,28 @@ function dynamicsearch(needle::AbstractString, mod::Module = Main,
     if mod == Main
       x -> x[2].exported
     else
-      let mod = mod
-        x -> x[2].exported && isdefined(mod, Symbol(x[2].mod))
+      let mod = mod, modstr = modstr
+        x -> begin
+          # filters out unexported bindings
+          x[2].exported &&
+          # filters bindings that can be reached from `mod`
+          (
+            isdefined(mod, Symbol(x[2].mod)) ||
+            modstr == x[2].mod # needed since submodules are not defined in themselves
+          )
+        end
       end
     end
   else
     if mod == Main
       x -> true
     else
-      let mod = mod
-        x -> isdefined(mod, Symbol(x[2].mod))
+      let mod = mod, modstr = modstr
+        x -> begin
+          # filters bindings that can be reached from `mod`
+          isdefined(mod, Symbol(x[2].mod)) ||
+          modstr == x[2].mod # needed since submodules are not defined in themselves
+        end
       end
     end
   end
