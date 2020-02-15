@@ -1,4 +1,9 @@
-CACHE = (0, [])
+mutable struct GlobalCache
+  time::Float64
+  cache::Vector{DocObj}
+end
+const CACHE = GlobalCache(time(), DocObj[])
+
 CACHETIMEOUT = 30 # s
 
 MAX_RETURN_SIZE = 20 # how many results to return at most
@@ -89,12 +94,8 @@ end
 
 Find all docstrings in all currently loaded Modules.
 """
-function alldocs(topmod = Main)
-  global CACHE
-
-  if (time() - CACHE[1]) < CACHETIMEOUT
-    return CACHE[2]
-  end
+function alldocs(topmod = Main)::Vector{DocObj}
+  time() - CACHE.time < CACHETIMEOUT && return CACHE.cache
 
   results = DocObj[]
   # all bindings
@@ -162,7 +163,8 @@ function alldocs(topmod = Main)
   results = unique(results)
 
   # update cache
-  CACHE = (time(), results)
+  CACHE.time = time()
+  CACHE.cache = results
 
   return results
 end
