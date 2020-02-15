@@ -2,7 +2,7 @@ mutable struct GlobalCache
   time::Float64
   cache::Vector{DocObj}
 end
-const CACHE = GlobalCache(time(), DocObj[])
+const CACHE = GlobalCache(0.0, DocObj[])
 
 CACHETIMEOUT = 30 # s
 
