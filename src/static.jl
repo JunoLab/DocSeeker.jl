@@ -5,7 +5,14 @@ using Serialization: serialize, deserialize
 include("utils.jl")
 
 const PROGRESS_ID = "docseeker_progress"
-DOCDBCACHE = DocObj[]
+const DB_DIR = joinpath(@__DIR__, "..", "db")
+"""
+    DOC_DB_CACHE::Vector{DocObj}
+
+Database of docstrings that is supposed to be created by [`createdocsdb`](@ref).
+"""
+const DOC_DB_CACHE = DocObj[]
+const DB_TASK = Ref{Union{Nothing,Task}}(nothing)
 
 function _createdocsdb()
   @info "Docs" progress=0 _id=PROGRESS_ID
@@ -22,6 +29,8 @@ function _createdocsdb()
   catch err
     @error err
   finally
+    @info "Docs: Refreshing database" progress=1-(1/1_000_000) _id=PROGRESS_ID
+    refreshdb!() # refresh database
     @info "" progress=1 _id=PROGRESS_ID
   end
 end
@@ -55,35 +64,39 @@ function createdocsdb()
       rm(joinpath(dbdir, file))
     end
   end
-  @async _createdocsdb()
+  DB_TASK[] = @async _createdocsdb()
   nothing
 end
 
 """
     loaddocsdb() -> Vector{DocObj}
 
-Retrieve the docstrings from the "database" created by [`createdocsdb()`](@ref).
-Will return an empty vector if the database is locked by [`createdocsdb()`](@ref).
+Retrieve the docstrings from [`DOC_DB_CACHE`](@ref).
 """
 function loaddocsdb()
-  global DOCDBCACHE
-  isempty(DOCDBCACHE) && (DOCDBCACHE = _loaddocsdb())
-  length(DOCDBCACHE) == 0 &&
+  if DB_TASK[] !== nothing && !istaskdone(DB_TASK[])
+    @warn "Doc cache is being created by `DocSeeker.createdocsdb()`."
+  end
+  isempty(DOC_DB_CACHE) && refreshdb!()
+  isempty(DOC_DB_CACHE) &&
     throw(ErrorException("Please regenerate the doc cache by calling `DocSeeker.createdocsdb()`."))
-  DOCDBCACHE
+  return DOC_DB_CACHE
 end
 
-function _loaddocsdb()
-  dbdir = joinpath(@__DIR__, "..", "db")
-  docs = DocObj[]
-  for file in readdir(dbdir)
+"""
+    refreshdb!()
+
+Refresh [`DOC_DB_CACHE`](@ref).
+"""
+function refreshdb!()
+  empty!(DOC_DB_CACHE)
+  for file in readdir(DB_DIR)
     endswith(file, ".db") || continue
     try
-      append!(docs, deserialize(joinpath(dbdir, file)))
+      append!(DOC_DB_CACHE, deserialize(joinpath(DB_DIR, file)))
     catch err
       # @error err, file
     end
   end
-  unique!(docs)
-  return docs
+  unique!(DOC_DB_CACHE)
 end
