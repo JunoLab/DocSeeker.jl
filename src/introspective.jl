@@ -2,11 +2,11 @@ mutable struct GlobalCache
   time::Float64
   cache::Vector{DocObj}
 end
-const CACHE = GlobalCache(0.0, DocObj[])
+const CACHE = GlobalCache(0., DocObj[])
 
-CACHETIMEOUT = 30 # s
+const CACHETIMEOUT = Ref(30.) # s
 
-MAX_RETURN_SIZE = 20 # how many results to return at most
+const MAX_RETURN_SIZE = 20 # how many results to return at most
 
 function searchdocs(needle::AbstractString; loaded::Bool = true, mod::Module = Main,
                     maxreturns::Int = MAX_RETURN_SIZE, exportedonly::Bool = false,
@@ -95,7 +95,7 @@ end
 Find all docstrings in all currently loaded Modules.
 """
 function alldocs(topmod = Main)::Vector{DocObj}
-  time() - CACHE.time < CACHETIMEOUT && return CACHE.cache
+  time() - CACHE.time < CACHETIMEOUT[] && return CACHE.cache
 
   results = DocObj[]
   # all bindings
