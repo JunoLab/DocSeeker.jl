@@ -43,8 +43,8 @@ function score(needle::AbstractString, s::DocObj, mod::String = "Main", name_onl
   score = 0.0
 
   needles = split(needle, ' ')
-  binding_score = length(needles) > 1 ? 0.0 : compare(needle, s.name, Winkler(Jaro()))
-  c_binding_score = length(needles) > 1 ? 0.0 : compare(lowercase(needle), lowercase(s.name), Winkler(Jaro()))
+  binding_score = length(needles) > 1 ? 0.0 : compare(needle, s.name, JaroWinkler())
+  c_binding_score = length(needles) > 1 ? 0.0 : compare(lowercase(needle), lowercase(s.name), JaroWinkler())
 
   if name_only
     score = c_binding_score
